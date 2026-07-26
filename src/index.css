@@ -3,65 +3,65 @@
    ============================================ */
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 :root {
-  /* Brand / Accent */
+  /* Brand / Accent - Matched with Surbhi Telecom Logo */
   --accent:        #6B8E23;
-  --accent-soft:   rgba(107, 142, 35, 0.1);
+  --accent-soft:   rgba(107, 142, 35, 0.12);
   --accent-mid:    rgba(107, 142, 35, 0.25);
 
-  /* Solid Backgrounds - Warm Sepia */
-  --bg-base:       #F4F1EA;
-  --bg-secondary:  #FFFFFF;
-  --bg-card:       rgba(255, 255, 255, 0.9);
-  --bg-surface:    rgba(244, 241, 234, 0.9);
-  --bg-hover:      #EAE5D9;
-  --bg-sidebar:    rgba(255, 255, 255, 0.95);
+  /* Solid & Glass Backgrounds - Warm Cream & Frosted Glass */
+  --bg-base:       #F7F4EE;
+  --bg-secondary:  rgba(255, 255, 255, 0.85);
+  --bg-card:       rgba(255, 255, 255, 0.82);
+  --bg-surface:    rgba(247, 244, 238, 0.85);
+  --bg-hover:      rgba(238, 233, 222, 0.85);
+  --bg-sidebar:    rgba(255, 255, 255, 0.85);
 
-  /* Semantic Colors - Earth Tones */
+  /* Semantic Colors - Logo Matched Harmony */
   --green:         #6B8E23;
-  --green-bg:      rgba(107, 142, 35, 0.15);
+  --green-bg:      rgba(107, 142, 35, 0.14);
   --red:           #C05C5C;
-  --red-bg:        rgba(192, 92, 92, 0.15);
+  --red-bg:        rgba(192, 92, 92, 0.14);
   --amber:         #D4A373;
-  --amber-bg:      rgba(212, 163, 115, 0.15);
+  --amber-bg:      rgba(212, 163, 115, 0.14);
   --cyan:          #5F859A;
-  --cyan-bg:       rgba(95, 133, 154, 0.15);
+  --cyan-bg:       rgba(95, 133, 154, 0.14);
   --purple:        #8E7298;
-  --purple-bg:     rgba(142, 114, 152, 0.15);
+  --purple-bg:     rgba(142, 114, 152, 0.14);
   --indigo:        #68607A;
-  --indigo-bg:     rgba(104, 96, 122, 0.15);
+  --indigo-bg:     rgba(104, 96, 122, 0.14);
   --blue:          #5F859A;
-  --blue-bg:       rgba(95, 133, 154, 0.15);
+  --blue-bg:       rgba(95, 133, 154, 0.14);
 
   /* Gradients */
   --grad-primary:  linear-gradient(135deg, #6B8E23 0%, #5F859A 100%);
-  --grad-secondary: linear-gradient(135deg, #8E7298 0%, #68607A 100%);
+  --grad-secondary: linear-gradient(135deg, #D4A373 0%, #68607A 100%);
   --grad-danger:   linear-gradient(135deg, #C05C5C 0%, #D4A373 100%);
   --grad-gold:     linear-gradient(135deg, #D4A373 0%, #C05C5C 100%);
 
-  /* Typography - Espresso / Coffee */
+  /* Typography - Deep Espresso */
   --text-primary:   #3E362E;
   --text-secondary: #7A6E62;
   --text-muted:     #A89F91;
   --text-inverse:   #FFFFFF;
 
-  /* Card Borders */
-  --border:        rgba(62, 54, 46, 0.08);
-  --border-strong: rgba(62, 54, 46, 0.15);
+  /* Glass Card Borders */
+  --border:        rgba(107, 142, 35, 0.15);
+  --border-strong: rgba(107, 142, 35, 0.28);
 
-  /* Premium Deep Shadows (Tinted Brown) */
-  --shadow-xs: 0 4px 10px rgba(62, 54, 46, 0.05);
-  --shadow-sm: 0 8px 20px rgba(62, 54, 46, 0.08);
-  --shadow-md: 0 12px 30px rgba(62, 54, 46, 0.12);
-  --shadow-lg: 0 20px 60px rgba(62, 54, 46, 0.15);
-  --shadow-xl: 0 30px 80px rgba(62, 54, 46, 0.2);
+  /* Premium Deep Glass Shadows */
+  --shadow-xs: 0 4px 12px rgba(62, 54, 46, 0.04);
+  --shadow-sm: 0 8px 24px rgba(62, 54, 46, 0.06);
+  --shadow-md: 0 14px 36px rgba(62, 54, 46, 0.09);
+  --shadow-lg: 0 22px 65px rgba(62, 54, 46, 0.12);
+  --shadow-xl: 0 32px 90px rgba(62, 54, 46, 0.16);
   
-  --shadow-glow: 0 0 20px rgba(107, 142, 35, 0.15);
+  --shadow-glow: 0 0 25px rgba(107, 142, 35, 0.18);
 
   /* Radii */
   --r-sm:  8px;
-  --r-md:  16px; /* buttons */
+  --r-md:  16px;
   --r-lg:  20px;
-  --r-xl:  24px; /* cards */
+  --r-xl:  24px;
   --r-2xl: 32px;
 
   /* Font */
@@ -118,10 +118,10 @@ body {
   animation: floatOrb 25s ease-in-out infinite alternate;
 }
 
-.orb-1 { width: 700px; height: 700px; background: #14F195; top: -10%; left: -10%; }
-.orb-2 { width: 800px; height: 800px; background: #22D3EE; bottom: -20%; right: -10%; animation-delay: -5s; animation-direction: alternate-reverse; }
-.orb-3 { width: 600px; height: 600px; background: #7C3AED; top: 40%; left: 30%; animation-duration: 30s; opacity: 0.08; }
-.orb-4 { width: 750px; height: 750px; background: #4F46E5; top: -20%; right: 20%; animation-delay: -12s; }
+.orb-1 { width: 700px; height: 700px; background: #6B8E23; top: -10%; left: -10%; }
+.orb-2 { width: 800px; height: 800px; background: #D4A373; bottom: -20%; right: -10%; animation-delay: -5s; animation-direction: alternate-reverse; }
+.orb-3 { width: 600px; height: 600px; background: #5F859A; top: 40%; left: 30%; animation-duration: 30s; opacity: 0.12; }
+.orb-4 { width: 750px; height: 750px; background: #8E7298; top: -20%; right: 20%; animation-delay: -12s; }
 
 @keyframes floatOrb {
   0% { transform: translate(0, 0) scale(1); }
@@ -192,21 +192,46 @@ input, select, textarea { font-family: var(--font); outline: none; }
 }
 
 .top-navbar {
-  width: 220px;
-  height: 100vh;
-  background: var(--bg-secondary);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-right: 1px solid var(--border);
-  border-bottom: none;
+  width: 255px;
+  height: calc(100vh - 24px);
+  margin: 12px 0 12px 12px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(107, 142, 35, 0.2);
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: space-between;
-  padding: 1.25rem 0.75rem;
+  padding: 1.25rem 0.85rem;
   z-index: 100;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 20px 50px rgba(62, 54, 46, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
   flex-shrink: 0;
+  transition: width 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), padding 0.35s ease, margin 0.35s ease;
+}
+
+.top-navbar.collapsed {
+  width: 78px;
+  padding: 1.25rem 0.5rem;
+}
+
+.top-navbar.collapsed .brand-title,
+.top-navbar.collapsed .nav-item-label,
+.top-navbar.collapsed .quick-links-title,
+.top-navbar.collapsed .quick-link-label,
+.top-navbar.collapsed .profile-details {
+  display: none !important;
+}
+
+.top-navbar.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px;
+}
+
+.top-navbar.collapsed .quick-link-item {
+  justify-content: center;
+  padding: 8px;
 }
 
 .brand {
@@ -297,9 +322,9 @@ input, select, textarea { font-family: var(--font); outline: none; }
   color: var(--text-primary);
 }
 .nav-item.active {
-  background: var(--text-primary);
-  color: var(--bg-base);
-  box-shadow: var(--shadow-xs);
+  background: linear-gradient(135deg, #6B8E23 0%, #55721B 100%);
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px rgba(107, 142, 35, 0.28);
 }
 
 .main-content {
@@ -542,16 +567,16 @@ input, select, textarea { font-family: var(--font); outline: none; }
   margin-bottom: 1.75rem;
 }
 .stat-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
   border-radius: var(--r-xl);
   padding: 1.5rem 1.75rem;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(107, 142, 35, 0.18);
   display: flex;
   align-items: flex-start;
   gap: 1.25rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 16px 40px rgba(62, 54, 46, 0.06), 0 0 20px rgba(107, 142, 35, 0.04);
   transition: all 0.3s var(--ease);
   min-height: 0;
 }

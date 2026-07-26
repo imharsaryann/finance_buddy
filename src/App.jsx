@@ -4,7 +4,7 @@ import {
   Users, CreditCard, Target, Calendar, Plus, Trash2,
   Edit3, Eye, CalendarCheck, ArrowRightLeft, X, Wallet, Pin,
   Building, CheckCircle, AlertTriangle, ChevronLeft, ChevronRight,
-  BarChart2, ArrowUpRight, ArrowDownRight, Menu, Loader, User, Minus, Briefcase, Clock, Shield, Info,
+  BarChart2, ArrowUpRight, ArrowDownRight, Menu, Loader, User, Minus, Briefcase, Clock, Shield, Info, Mail, Lock,
   Download, Upload, FileText, Database, RefreshCw, Settings, MoreVertical, Sparkles, Globe, ExternalLink, Search, Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -492,6 +492,10 @@ export default function App() {
   const [settingsTab, setSettingsTab] = useState('profile');
   const [importing, setImporting] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
+  const [showNavLinks, setShowNavLinks] = useState(() => localStorage.getItem('fb_show_nav_links') === 'true');
+  const [showIncomesNav, setShowIncomesNav] = useState(() => localStorage.getItem('fb_show_incomes_nav') === 'true');
+  const [showExpensesNav, setShowExpensesNav] = useState(() => localStorage.getItem('fb_show_expenses_nav') === 'true');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('fb_sidebar_collapsed') === 'true');
 
   // Admin Control Center & Impersonation State
   const [extraAdminEmails, setExtraAdminEmails] = useState(() => {
@@ -502,6 +506,28 @@ export default function App() {
       return [];
     }
   });
+
+  const [adminSearchQuery, setAdminSearchQuery] = useState('');
+  const [logoClickCount, setLogoClickCount] = useState(0);
+  const [lastLogoClickTime, setLastLogoClickTime] = useState(0);
+
+  const handleLogoSecretClick = () => {
+    const now = Date.now();
+    if (now - lastLogoClickTime < 3000) {
+      const nextCount = logoClickCount + 1;
+      setLogoClickCount(nextCount);
+      if (nextCount >= 5) {
+        setLogoClickCount(0);
+        setSettingsTab('admin');
+        setView('settings');
+        fetchAdminOverviewData();
+        setSettingsMessage('👑 Secret Master Admin Access Unlocked!');
+      }
+    } else {
+      setLogoClickCount(1);
+    }
+    setLastLogoClickTime(now);
+  };
 
   const isAdmin = Boolean(
     session?.user?.email && (
@@ -618,12 +644,7 @@ export default function App() {
   // Web Apps & Shortcuts State
   const [webApps, setWebApps] = useState(() => {
     const saved = localStorage.getItem('fb_web_apps');
-    return saved ? JSON.parse(saved) : [
-      { id: '1', title: 'Supabase Dashboard', url: 'https://supabase.com/dashboard', category: 'Development', description: 'Cloud Postgres & Auth Dashboard', is_pinned: true },
-      { id: '2', title: 'ChatGPT', url: 'https://chatgpt.com', category: 'AI & Tech', description: 'AI Coding & Assistant', is_pinned: true },
-      { id: '3', title: 'Zerodha Kite', url: 'https://kite.zerodha.com', category: 'Finance', description: 'Trading & Investments', is_pinned: false },
-      { id: '4', title: 'GitHub', url: 'https://github.com', category: 'Development', description: 'Code Repositories', is_pinned: false }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
   const [webAppCategoryFilter, setWebAppCategoryFilter] = useState('all');
   const [webAppSearch, setWebAppSearch] = useState('');
@@ -1639,7 +1660,7 @@ export default function App() {
   const exportAllDataJSON = () => {
     try {
       const exportObject = {
-        app: 'Finance Buddy',
+        app: 'Surbhi Telecom',
         version: '1.0',
         exportedAt: new Date().toISOString(),
         userEmail: session?.user?.email || 'user',
@@ -2022,7 +2043,7 @@ export default function App() {
     return (
       <div className="loader-container">
         <div className="pulsing-orb" style={{ background: 'transparent', boxShadow: 'none' }}>
-          <img src="/icon.svg" style={{ width: 48, height: 48, filter: 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.4))' }} alt="Loading" />
+          <img src="/logo-surbhi.svg" style={{ width: 72, height: 72, filter: 'drop-shadow(0 0 14px rgba(16, 185, 129, 0.3))', objectFit: 'contain' }} alt="Loading" />
         </div>
         <span className="loader-text">Syncing with Supabase...</span>
       </div>
@@ -2031,110 +2052,254 @@ export default function App() {
 
   if (!session) {
     return (
-      <div className="login-container" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', padding: 0 }}>
-        
-        {/* BACKGROUND IMAGE */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <img src="/updated_login_page.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Background" />
+      <div style={{
+        position: 'relative',
+        minHeight: '100vh',
+        width: '100vw',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        background: 'var(--bg-base)',
+        fontFamily: 'var(--font)'
+      }}>
+        {/* Dynamic Theme Background Orbs matching Surbhi Logo Colors */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+          <div style={{ position: 'absolute', top: '-15%', left: '-10%', width: '650px', height: '650px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(107, 142, 35, 0.25) 0%, rgba(107, 142, 35, 0) 70%)', filter: 'blur(80px)' }} />
+          <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(212, 163, 115, 0.22) 0%, rgba(212, 163, 115, 0) 70%)', filter: 'blur(90px)' }} />
+          <div style={{ position: 'absolute', top: '40%', right: '20%', width: '550px', height: '550px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(95, 133, 154, 0.18) 0%, rgba(95, 133, 154, 0) 70%)', filter: 'blur(75px)' }} />
         </div>
 
-        {/* LIGHT OVERLAY */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(255, 255, 255, 0.75)' }}></div>
+        {/* Ambient Subtle Grid Pattern */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'radial-gradient(rgba(62, 54, 46, 0.06) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          opacity: 0.6,
+          zIndex: 1
+        }} />
 
-        {/* CENTERED LOGIN BOARD */}
-        <div style={{ position: 'relative', zIndex: 2, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
-           
-           <div style={{ background: 'var(--bg-card)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--border)', borderRadius: '24px', padding: '2.5rem 2.25rem', width: '100%', maxWidth: '380px', boxShadow: 'var(--shadow-xl)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-             
-             {/* LOGO & TITLE INSIDE BOX */}
-             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
-                <img src="/icon.svg" style={{ width: 44, height: 44, filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.2))' }} alt="Finance Buddy" />
-                <span style={{ fontSize: '1.5rem', fontWeight: 900, background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--green) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Finance Buddy</span>
-             </div>
+        {/* Centered Luxury Glass Login Card */}
+        <div style={{
+          position: 'relative',
+          zIndex: 2,
+          width: '100%',
+          maxWidth: '430px',
+          margin: '1.5rem',
+          padding: '2.5rem 2.25rem',
+          borderRadius: '28px',
+          background: 'rgba(255, 255, 255, 0.88)',
+          backdropFilter: 'blur(32px)',
+          WebkitBackdropFilter: 'blur(32px)',
+          border: '1px solid rgba(107, 142, 35, 0.22)',
+          boxShadow: '0 24px 60px rgba(62, 54, 46, 0.12), 0 0 30px rgba(107, 142, 35, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          {/* Logo & Brand Title */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '1.75rem' }}>
+            <div style={{
+              width: '96px',
+              height: '96px',
+              borderRadius: '24px',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(244, 241, 234, 0.85) 100%)',
+              border: '1px solid rgba(107, 142, 35, 0.25)',
+              boxShadow: '0 12px 28px rgba(62, 54, 46, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '12px',
+              marginBottom: '1rem'
+            }}>
+              <img
+                src="/logo-surbhi.svg"
+                style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 10px rgba(107, 142, 35, 0.2))' }}
+                alt="Surbhi Telecom"
+              />
+            </div>
 
-             {/* SIGN IN / SIGN UP MODE SWITCHER TABS */}
-             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'var(--bg-hover)', borderRadius: '12px', padding: '4px', width: '100%', marginBottom: '1.25rem' }}>
-               <button
-                 type="button"
-                 onClick={() => { setIsSignUp(false); setAuthError(''); }}
-                 style={{
-                   padding: '8px',
-                   borderRadius: '9px',
-                   border: 'none',
-                   background: !isSignUp ? 'var(--bg-card)' : 'transparent',
-                   color: !isSignUp ? 'var(--text-primary)' : 'var(--text-secondary)',
-                   fontWeight: 800,
-                   fontSize: '0.85rem',
-                   cursor: 'pointer',
-                   boxShadow: !isSignUp ? 'var(--shadow-xs)' : 'none',
-                   transition: 'all 0.15s ease'
-                 }}
-               >
-                 Sign In
-               </button>
-               <button
-                 type="button"
-                 onClick={() => { setIsSignUp(true); setAuthError(''); }}
-                 style={{
-                   padding: '8px',
-                   borderRadius: '9px',
-                   border: 'none',
-                   background: isSignUp ? 'var(--bg-card)' : 'transparent',
-                   color: isSignUp ? 'var(--text-primary)' : 'var(--text-secondary)',
-                   fontWeight: 800,
-                   fontSize: '0.85rem',
-                   cursor: 'pointer',
-                   boxShadow: isSignUp ? 'var(--shadow-xs)' : 'none',
-                   transition: 'all 0.15s ease'
-                 }}
-               >
-                 Sign Up
-               </button>
-             </div>
+            <h1 style={{
+              fontSize: '1.75rem',
+              fontWeight: 900,
+              letterSpacing: '-0.5px',
+              background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--green) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              margin: 0
+            }}>
+              Surbhi Telecom
+            </h1>
+            <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginTop: '4px' }}>
+              Smart Business & Wealth Management Portal
+            </p>
+          </div>
 
-             <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-                <input 
-                  type="email" 
-                  placeholder="Email Address" 
-                  value={authEmail} 
-                  onChange={e => setAuthEmail(e.target.value)} 
-                  required 
-                  className="glass-input" 
-                  style={{ width: '100%', height: '46px', padding: '0 16px', background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600 }} 
-                />
-                <input 
-                  type="password" 
-                  placeholder="Password (min 6 characters)" 
-                  value={authPassword} 
-                  onChange={e => setAuthPassword(e.target.value)} 
-                  required 
-                  minLength={6}
-                  className="glass-input" 
-                  style={{ width: '100%', height: '46px', padding: '0 16px', background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600 }} 
-                />
-                <button type="submit" className="glass-btn btn-primary" style={{ width: '100%', height: '46px', fontSize: '0.95rem', fontWeight: 800, marginTop: '0.25rem', borderRadius: '12px' }}>
-                  {isSignUp ? 'Create New Account (Sign Up)' : 'Sign In to Dashboard'}
-                </button>
-             </form>
+          {/* Mode Switcher Tabs */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            background: 'var(--bg-hover)',
+            borderRadius: '16px',
+            padding: '4px',
+            width: '100%',
+            marginBottom: '1.5rem',
+            border: '1px solid var(--border)'
+          }}>
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(false); setAuthError(''); }}
+              style={{
+                padding: '10px',
+                borderRadius: '12px',
+                border: 'none',
+                background: !isSignUp ? 'var(--bg-card)' : 'transparent',
+                color: !isSignUp ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontWeight: 800,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                boxShadow: !isSignUp ? 'var(--shadow-xs)' : 'none',
+                transition: 'all 0.2s var(--ease)'
+              }}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(true); setAuthError(''); }}
+              style={{
+                padding: '10px',
+                borderRadius: '12px',
+                border: 'none',
+                background: isSignUp ? 'var(--bg-card)' : 'transparent',
+                color: isSignUp ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontWeight: 800,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                boxShadow: isSignUp ? 'var(--shadow-xs)' : 'none',
+                transition: 'all 0.2s var(--ease)'
+              }}
+            >
+              Create Account
+            </button>
+          </div>
 
-             {/* Bottom Toggle Text */}
-             <div style={{ marginTop: '1.25rem', fontSize: '0.82rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                {isSignUp ? 'Already registered? ' : 'New to Finance Buddy? '}
-                <button 
-                  type="button" 
-                  onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }}
-                  style={{ background: 'none', border: 'none', color: 'var(--green)', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-                >
-                  {isSignUp ? 'Sign In here' : 'Create an Account'}
-                </button>
-             </div>
+          {/* Auth Form */}
+          <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', width: '100%' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}>
+                <Mail size={18} />
+              </div>
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={authEmail}
+                onChange={e => setAuthEmail(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  height: '48px',
+                  paddingLeft: '44px',
+                  paddingRight: '16px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-strong)',
+                  color: 'var(--text-primary)',
+                  borderRadius: '14px',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                onFocus={e => {
+                  e.target.style.borderColor = 'var(--green)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.15)';
+                }}
+                onBlur={e => {
+                  e.target.style.borderColor = 'var(--border-strong)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
 
-             {authError && (
-               <div style={{ width: '100%', color: 'var(--red)', marginTop: '1.25rem', padding: '10px 14px', background: 'var(--red-bg)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.82rem', textAlign: 'center' }}>
-                 <AlertTriangle size={15} /> {authError}
-               </div>
-             )}
-           </div>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}>
+                <Lock size={18} />
+              </div>
+              <input
+                type="password"
+                placeholder="Password (min 6 characters)"
+                value={authPassword}
+                onChange={e => setAuthPassword(e.target.value)}
+                required
+                minLength={6}
+                style={{
+                  width: '100%',
+                  height: '48px',
+                  paddingLeft: '44px',
+                  paddingRight: '16px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-strong)',
+                  color: 'var(--text-primary)',
+                  borderRadius: '14px',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                onFocus={e => {
+                  e.target.style.borderColor = 'var(--green)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.15)';
+                }}
+                onBlur={e => {
+                  e.target.style.borderColor = 'var(--border-strong)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{
+                width: '100%',
+                height: '48px',
+                fontSize: '0.95rem',
+                fontWeight: 800,
+                marginTop: '0.25rem',
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, var(--green) 0%, #55721B 100%)',
+                color: '#ffffff',
+                border: 'none',
+                boxShadow: '0 8px 20px rgba(107, 142, 35, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {isSignUp ? 'Create New Account' : 'Sign In to Dashboard'}
+            </button>
+          </form>
+
+          {/* Toggle Helper Link */}
+          <div style={{ marginTop: '1.25rem', fontSize: '0.84rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+            {isSignUp ? 'Already have an account? ' : 'New to Surbhi Telecom? '}
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }}
+              style={{ background: 'none', border: 'none', color: 'var(--green)', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+            >
+              {isSignUp ? 'Sign In here' : 'Create an Account'}
+            </button>
+          </div>
+
+          {authError && (
+            <div style={{ width: '100%', color: 'var(--red)', marginTop: '1.25rem', padding: '10px 14px', background: 'var(--red-bg)', borderRadius: '12px', border: '1px solid rgba(192, 92, 92, 0.3)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.82rem', textAlign: 'center' }}>
+              <AlertTriangle size={15} /> {authError}
+            </div>
+          )}
 
         </div>
       </div>
@@ -2142,16 +2307,15 @@ export default function App() {
   }
 
   const navItems = [
+    { id: 'web-apps', label: 'Links', icon: <Globe size={18}/> },
     { id: 'dashboard', label: 'Dashboard', icon: <Home size={18}/> },
-    { id: 'incomes', label: 'Incomes', icon: <TrendingUp size={18}/> },
-    { id: 'expenses', label: 'Expenses', icon: <TrendingDown size={18}/> },
+    ...(showIncomesNav ? [{ id: 'incomes', label: 'Incomes', icon: <TrendingUp size={18}/> }] : []),
+    ...(showExpensesNav ? [{ id: 'expenses', label: 'Expenses', icon: <TrendingDown size={18}/> }] : []),
     { id: 'banks', label: 'Banks & Cash', icon: <Building size={18}/> },
     { id: 'credit-cards', label: 'Credit Cards', icon: <CreditCard size={18}/> },
     { id: 'borrowers', label: 'Khata / Udhar', icon: <Users size={18}/> },
     { id: 'samiti', label: 'Samiti', icon: <Target size={18}/> },
-    { id: 'personal', label: 'Personal', icon: <Shield size={18}/> },
-    { id: 'web-apps', label: 'Links', icon: <Globe size={18}/> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={18}/> }
+    { id: 'personal', label: 'Personal', icon: <Shield size={18}/> }
   ];
 
   return (
@@ -2163,11 +2327,142 @@ export default function App() {
         <div className="orb orb-4"></div>
       </div>
       <div className="app-layout">
-        {/* ═══ TOP NAVBAR / LEFT SIDEBAR ═══ */}
-      <nav className="top-navbar">
-        <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img src="/icon.svg" style={{ width: 32, height: 32, filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.2))' }} alt="FinBuddy" />
-          <span style={{ fontSize: '1.2rem', fontWeight: 900, background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--green) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Finance Buddy</span>
+      <nav className={`top-navbar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: sidebarCollapsed ? '0' : '0.25rem 0.25rem 0.75rem 0.25rem',
+          borderBottom: sidebarCollapsed ? 'none' : '1px solid var(--border)',
+          marginBottom: '0.75rem',
+          position: 'relative',
+          width: '100%'
+        }}>
+          {/* Absolute Collapse Toggle Button (Top Right) */}
+          {!sidebarCollapsed && (
+            <button
+              onClick={() => {
+                setSidebarCollapsed(true);
+                localStorage.setItem('fb_sidebar_collapsed', 'true');
+              }}
+              title="Collapse Sidebar"
+              style={{
+                position: 'absolute',
+                top: '0px',
+                right: '0px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '26px',
+                height: '26px',
+                borderRadius: '8px',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                zIndex: 2
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--bg-hover)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'var(--bg-surface)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
+            >
+              <ChevronLeft size={15} />
+            </button>
+          )}
+
+          {/* Centered Large Logo Glass Container (Secret Admin Click Trigger) */}
+          <div
+            onClick={handleLogoSecretClick}
+            style={{
+              width: sidebarCollapsed ? '44px' : '72px',
+              height: sidebarCollapsed ? '44px' : '72px',
+              borderRadius: sidebarCollapsed ? '14px' : '20px',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 241, 234, 0.9) 100%)',
+              border: '1px solid rgba(107, 142, 35, 0.3)',
+              boxShadow: '0 8px 20px rgba(62, 54, 46, 0.09), inset 0 0 0 1px rgba(255, 255, 255, 0.95)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: sidebarCollapsed ? '5px' : '7px',
+              margin: '0 auto',
+              transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+              flexShrink: 0,
+              cursor: 'pointer'
+            }}
+            title="Surbhi Telecom (5x Fast Clicks = Admin Access)"
+          >
+            <img src="/logo-surbhi.svg" style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} alt="Surbhi Telecom" />
+          </div>
+
+          {/* Expand Toggle Button when Collapsed */}
+          {sidebarCollapsed && (
+            <button
+              onClick={() => {
+                setSidebarCollapsed(false);
+                localStorage.setItem('fb_sidebar_collapsed', 'false');
+              }}
+              title="Expand Sidebar"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '26px',
+                height: '26px',
+                borderRadius: '8px',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                margin: '8px auto 0 auto'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--bg-hover)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'var(--bg-surface)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
+            >
+              <ChevronRight size={15} />
+            </button>
+          )}
+
+          {/* Brand Name & Subtitle Below Logo */}
+          {!sidebarCollapsed && (
+            <div style={{ textAlign: 'center', width: '100%', marginTop: '8px' }}>
+              <div style={{
+                fontSize: '1.15rem',
+                fontWeight: 900,
+                fontFamily: "'Outfit', 'Inter', sans-serif",
+                letterSpacing: '0.8px',
+                background: 'linear-gradient(135deg, var(--text-primary) 0%, #4E6B18 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                lineHeight: 1.2
+              }}>
+                SURBHI TELECOM
+              </div>
+              <div style={{
+                fontSize: '0.65rem',
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                letterSpacing: '1.8px',
+                textTransform: 'uppercase',
+                marginTop: '4px'
+              }}>
+                Wealth & Business
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="nav-menu">
@@ -2176,21 +2471,137 @@ export default function App() {
               key={it.id}
               className={`nav-item ${view === it.id ? 'active' : ''}`}
               onClick={() => { setView(it.id); setMobileMenuOpen(false); }}
+              title={it.label}
             >
               <div style={{ flexShrink: 0, fontSize: '1.1rem', lineHeight: 1 }}>{it.icon}</div>
-              <span className="nav-item-label">{it.label}</span>
+              {!sidebarCollapsed && <span className="nav-item-label">{it.label}</span>}
             </button>
           ))}
         </div>
 
-        <div className="nav-profile" style={{ background: 'transparent', border: 'none', padding: 0 }}>
-          <button 
-            className="mobile-menu-btn" 
-            onClick={() => setMobileMenuOpen(true)}
-            style={{ display: 'none', background: 'transparent', border: 'none', color: 'var(--text-primary)', padding: '8px', cursor: 'pointer' }}
-          >
-            <Menu size={24} />
-          </button>
+        {/* ── QUICK LINKS (Pinned Web Apps) ── */}
+        {showNavLinks && webApps.filter(a => a.is_pinned).length > 0 && (
+          <div style={{
+            marginBottom: '0.75rem',
+            padding: '0 2px',
+            borderTop: '1px solid var(--border)',
+            paddingTop: '0.75rem',
+          }}>
+            {!sidebarCollapsed && (
+              <div className="quick-links-title" style={{
+                fontSize: '0.65rem',
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                padding: '0 12px',
+                marginBottom: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <ExternalLink size={10} />
+                Quick Links
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {webApps.filter(a => a.is_pinned).slice(0, 5).map(app => (
+                <a
+                  key={app.id}
+                  href={app.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={app.title}
+                  className="quick-link-item"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                    gap: '8px',
+                    padding: sidebarCollapsed ? '8px' : '7px 14px',
+                    borderRadius: '10px',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 600,
+                    fontSize: '0.82rem',
+                    textDecoration: 'none',
+                    transition: 'all 0.15s ease',
+                    border: '1px solid transparent',
+                    cursor: 'pointer',
+                    background: 'transparent',
+                    overflow: 'hidden',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'var(--bg-hover)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
+                  }}
+                >
+                  <AppFavicon title={app.title} url={app.url} size={14} />
+                  {!sidebarCollapsed && (
+                    <span className="quick-link-label" style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flex: 1,
+                      minWidth: 0,
+                    }}>{app.title}</span>
+                  )}
+                  {!sidebarCollapsed && <ExternalLink size={10} style={{ flexShrink: 0, opacity: 0.4 }} />}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* User Profile Glass Footer */}
+        <div
+          className="nav-profile"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: sidebarCollapsed ? '8px' : '10px 12px',
+            borderRadius: '16px',
+            background: 'rgba(247, 244, 238, 0.7)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(107, 142, 35, 0.18)',
+            justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            marginTop: 'auto'
+          }}
+          onClick={() => setView('settings')}
+          title="Account Settings"
+        >
+          <div className="profile-avatar" style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, var(--green) 0%, #4E6B18 100%)',
+            color: '#fff',
+            fontWeight: 800,
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(107, 142, 35, 0.3)',
+            flexShrink: 0
+          }}>
+            {(session?.user?.user_metadata?.full_name || session?.user?.email || 'U')[0].toUpperCase()}
+          </div>
+          {!sidebarCollapsed && (
+            <div className="profile-details" style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                {session?.user?.user_metadata?.full_name || 'Account'}
+              </div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                {session?.user?.email}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -3692,129 +4103,146 @@ export default function App() {
             </div>
           )}
 
-          {/* ══ PERSONAL ══ */}
+          {/* ══ PERSONAL RESERVE & VAULT ══ */}
           {view === 'personal' && (
-            <div className="fade-in-view">
-              <div className="page-header">
+            <div className="fade-in-view" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+              {/* Glass Header */}
+              <div className="page-header" style={{ marginBottom: '1.75rem' }}>
                 <div className="page-header-left">
-                  <span className="eyebrow">Personal Emergency & Reserve Savings</span>
-                  <h1>Personal</h1>
+                  <span className="eyebrow" style={{ color: 'var(--green)', fontWeight: 800 }}>Personal Emergency & Reserve Savings</span>
+                  <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)' }}>Personal Vault</h1>
                 </div>
-                <div className="page-header-right" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button className="btn" style={{ background: 'var(--purple-bg)', color: 'var(--purple)' }} onClick={() => openModal('Set Reserve Target', 'vault-target')}>
-                    <Edit3 size={15}/> Edit Fund (₹)
+                <div className="page-header-right" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn"
+                    style={{ background: 'rgba(142, 114, 152, 0.15)', color: 'var(--purple)', border: '1px solid rgba(142, 114, 152, 0.3)', borderRadius: '14px', padding: '10px 18px', fontWeight: 800 }}
+                    onClick={() => openModal('Set Reserve Target', 'vault-target')}
+                  >
+                    <Edit3 size={16}/> Edit Target (₹)
                   </button>
-                  <button className="btn" style={{ background: 'var(--red-bg)', color: 'var(--red)' }} onClick={() => openModal('Use Reserve Money', 'vault-use')}>
-                    <Minus size={15}/> Use Money
+                  <button
+                    className="btn"
+                    style={{ background: 'rgba(192, 92, 92, 0.15)', color: 'var(--red)', border: '1px solid rgba(192, 92, 92, 0.3)', borderRadius: '14px', padding: '10px 18px', fontWeight: 800 }}
+                    onClick={() => openModal('Use Reserve Money', 'vault-use')}
+                  >
+                    <Minus size={16}/> Use Money
                   </button>
-                  <button className="btn btn-primary" onClick={() => openModal('Replenish Reserve', 'vault-deposit')}>
-                    <Plus size={15}/> Deposit Back
+                  <button
+                    className="btn btn-primary"
+                    style={{ background: 'linear-gradient(135deg, var(--green) 0%, #4E6B18 100%)', color: '#fff', border: 'none', borderRadius: '14px', padding: '10px 20px', fontWeight: 800, boxShadow: '0 8px 20px rgba(107, 142, 35, 0.3)' }}
+                    onClick={() => openModal('Replenish Reserve', 'vault-deposit')}
+                  >
+                    <Plus size={16}/> Deposit Back
                   </button>
                 </div>
               </div>
 
-              {/* Stat Grid */}
+              {/* Glass Stat Grid */}
               <div className="stat-grid" style={{ marginBottom: '1.75rem' }}>
-                <StatCard icon={<Shield size={18}/>} color="purple" label="Total Reserve Fund" value={fmt(vaultTarget)} />
-                <StatCard icon={<Wallet size={18}/>} color="green" label="Available Balance" value={fmt(availableVaultBalance)} valueColor="green" />
-                <StatCard icon={<TrendingDown size={18}/>} color="red" label="Used / Outstanding" value={fmt(netVaultUsed)} valueColor={netVaultUsed > 0 ? 'red' : ''} />
+                <StatCard icon={<Shield size={20}/>} color="purple" label="Total Reserve Target" value={fmt(vaultTarget)} />
+                <StatCard icon={<Wallet size={20}/>} color="green" label="Available Balance" value={fmt(availableVaultBalance)} valueColor="green" />
+                <StatCard icon={<TrendingDown size={20}/>} color="red" label="Used / Outstanding" value={fmt(netVaultUsed)} valueColor={netVaultUsed > 0 ? 'red' : ''} />
               </div>
 
-              {/* Progress Panel */}
-              <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.75rem', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '1.5rem' }}>{vaultRestorationPct === 100 ? '🛡️' : '⚠️'}</span>
+              {/* Replenishment Progress Panel */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(32px)',
+                WebkitBackdropFilter: 'blur(32px)',
+                borderRadius: '24px',
+                padding: '1.75rem 2rem',
+                border: '1px solid rgba(107, 142, 35, 0.2)',
+                boxShadow: '0 16px 40px rgba(62, 54, 46, 0.06)',
+                marginBottom: '1.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '1.75rem' }}>{vaultRestorationPct === 100 ? '🛡️' : '⚠️'}</span>
                     <div>
-                      <h4 style={{ fontSize: '1rem', fontWeight: 800 }}>
+                      <h4 style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
                         {vaultRestorationPct === 100 ? 'Vault Fully Intact (100%)' : `Vault Replenishment Progress: ${vaultRestorationPct}%`}
                       </h4>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '3px 0 0 0', fontWeight: 600 }}>
                         {vaultRestorationPct === 100 ? 'Your reserve savings are complete and available for emergency use.' : `₹${netVaultUsed.toLocaleString('en-IN')} is currently used and needs replenishment.`}
                       </p>
                     </div>
                   </div>
-                  <span className="badge" style={{ background: vaultRestorationPct === 100 ? 'var(--green-bg)' : 'var(--red-bg)', color: vaultRestorationPct === 100 ? 'var(--green)' : 'var(--red)', fontSize: '0.8rem', padding: '6px 12px' }}>
+                  <span style={{
+                    background: vaultRestorationPct === 100 ? 'rgba(107, 142, 35, 0.15)' : 'rgba(192, 92, 92, 0.15)',
+                    color: vaultRestorationPct === 100 ? 'var(--green)' : 'var(--red)',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    padding: '8px 16px',
+                    borderRadius: '99px',
+                    border: vaultRestorationPct === 100 ? '1px solid rgba(107, 142, 35, 0.3)' : '1px solid rgba(192, 92, 92, 0.3)'
+                  }}>
                     {vaultRestorationPct === 100 ? 'Fully Restored' : 'Used Money Pending'}
                   </span>
                 </div>
-                <div style={{ height: '10px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${vaultRestorationPct}%`, background: vaultRestorationPct === 100 ? 'linear-gradient(90deg, var(--green), #059669)' : 'linear-gradient(90deg, var(--red), var(--purple))', borderRadius: '99px', transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+
+                <div style={{ height: '12px', background: 'var(--bg-hover)', borderRadius: '99px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${vaultRestorationPct}%`,
+                    background: vaultRestorationPct === 100 ? 'linear-gradient(90deg, #6B8E23, #4E6B18)' : 'linear-gradient(90deg, var(--red), var(--amber))',
+                    borderRadius: '99px',
+                    transition: 'width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                    boxShadow: '0 0 12px rgba(107, 142, 35, 0.3)'
+                  }} />
                 </div>
               </div>
 
-              {/* Grid: Profile Edit & History */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-                
-                {/* Profile Edit */}
-                <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ background: 'var(--blue-bg)', padding: '12px', borderRadius: '50%', color: 'var(--blue)' }}><User size={24}/></div>
-                    <div>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Profile Details</h3>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Update your display name.</p>
+              {/* Vault Activity Logs Card */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(32px)',
+                WebkitBackdropFilter: 'blur(32px)',
+                borderRadius: '24px',
+                padding: '1.75rem',
+                border: '1px solid rgba(107, 142, 35, 0.2)',
+                boxShadow: '0 16px 40px rgba(62, 54, 46, 0.06)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.25rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Clock size={20} style={{ color: 'var(--purple)' }}/> Vault Activity Log
+                  </h3>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-muted)', background: 'var(--bg-surface)', padding: '4px 10px', borderRadius: '99px', border: '1px solid var(--border)' }}>
+                    {vaultLogs.length} Records
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '340px', overflowY: 'auto' }}>
+                  {vaultLogs.map(log => (
+                    <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ background: log.type === 'withdrawal' ? 'rgba(192, 92, 92, 0.15)' : 'rgba(107, 142, 35, 0.15)', color: log.type === 'withdrawal' ? 'var(--red)' : 'var(--green)', padding: '8px', borderRadius: '50%', display: 'flex' }}>
+                          {log.type === 'withdrawal' ? <TrendingDown size={15}/> : <TrendingUp size={15}/>}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>{log.reason}</div>
+                          <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginTop: '2px' }}>{log.date}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: log.type === 'withdrawal' ? 'var(--red)' : 'var(--green)' }}>
+                          {log.type === 'withdrawal' ? '-' : '+'}{fmt(log.amount)}
+                        </span>
+                        <button className="btn-icon danger" style={{ width: 24, height: 24, borderRadius: '50%' }} onClick={() => deleteVaultLog(log.id)}><Trash2 size={12}/></button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  {settingsMessage && (
-                    <div style={{ padding: '10px 14px', background: settingsMessage.includes('Error') ? 'var(--red-bg)' : 'var(--green-bg)', color: settingsMessage.includes('Error') ? 'var(--red)' : 'var(--green)', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
-                      {settingsMessage}
+                  ))}
+                  {vaultLogs.length === 0 && (
+                    <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: '2rem' }}>
+                      No vault activity recorded yet.
                     </div>
                   )}
-
-                  <form onSubmit={handleUpdateName} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Display Name</label>
-                      <input 
-                        type="text" 
-                        value={settingsName} 
-                        onChange={e => setSettingsName(e.target.value)} 
-                        placeholder={session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0]} 
-                        className="glass-input" 
-                        style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: '8px', color: 'var(--text-primary)' }}
-                      />
-                    </div>
-                    <button type="submit" className="glass-btn" style={{ background: 'linear-gradient(135deg, var(--blue) 0%, #2563EB 100%)', borderRadius: '8px', padding: '12px' }}>Update Name</button>
-                  </form>
                 </div>
-
-                {/* Vault Logs Table */}
-                <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Clock size={18} style={{ color: 'var(--purple)' }}/> Vault History
-                    </h3>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{vaultLogs.length} Records</span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '350px', overflowY: 'auto' }}>
-                    {vaultLogs.map(log => (
-                      <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-hover)', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ background: log.type === 'withdrawal' ? 'var(--red-bg)' : 'var(--green-bg)', color: log.type === 'withdrawal' ? 'var(--red)' : 'var(--green)', padding: '6px', borderRadius: '50%', display: 'flex' }}>
-                            {log.type === 'withdrawal' ? <TrendingDown size={14}/> : <TrendingUp size={14}/>}
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>{log.reason}</div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{log.date}</div>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: log.type === 'withdrawal' ? 'var(--red)' : 'var(--green)' }}>
-                            {log.type === 'withdrawal' ? '-' : '+'}{fmt(log.amount)}
-                          </span>
-                          <button className="btn-icon danger" style={{ width: 24, height: 24, borderRadius: '50%' }} onClick={() => deleteVaultLog(log.id)}><Trash2 size={12}/></button>
-                        </div>
-                      </div>
-                    ))}
-                    {vaultLogs.length === 0 && (
-                      <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: '2rem' }}>
-                        No vault activity recorded yet.
-                      </div>
-                    )}
-                  </div>
-                </div>
-
               </div>
             </div>
           )}
@@ -4075,32 +4503,34 @@ export default function App() {
             );
           })()}
 
-          {/* ══ INSTAGRAM-STYLE SETTINGS ══ */}
+          {/* ══ SETTINGS PAGE ══ */}
           {view === 'settings' && (
-            <div className="fade-in-view" style={{ maxWidth: '920px', margin: '0 auto' }}>
+            <div className="fade-in-view" style={{ maxWidth: '980px', margin: '0 auto' }}>
               
               {/* Header */}
               <div className="page-header" style={{ marginBottom: '1.75rem' }}>
                 <div className="page-header-left">
-                  <span className="eyebrow">PREFERENCES & ACCOUNT</span>
-                  <h1>Settings</h1>
+                  <span className="eyebrow" style={{ color: 'var(--green)', fontWeight: 800 }}>PREFERENCES & ACCOUNT MANAGEMENT</span>
+                  <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)' }}>Settings</h1>
                 </div>
               </div>
 
-              {/* Top Profile Banner (Instagram Profile Style) */}
+              {/* Glass Profile Banner Card */}
               <div 
                 style={{ 
-                  background: 'var(--bg-secondary)', 
-                  border: '1px solid var(--border)', 
-                  borderRadius: 'var(--r-xl)', 
-                  padding: '1.5rem 1.75rem', 
-                  marginBottom: '1.5rem', 
+                  background: 'rgba(255, 255, 255, 0.85)', 
+                  backdropFilter: 'blur(32px)',
+                  WebkitBackdropFilter: 'blur(32px)',
+                  border: '1px solid rgba(107, 142, 35, 0.2)', 
+                  borderRadius: '24px', 
+                  padding: '1.75rem 2rem', 
+                  marginBottom: '1.75rem', 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between',
                   flexWrap: 'wrap',
                   gap: '1.25rem',
-                  boxShadow: 'var(--shadow-sm)'
+                  boxShadow: '0 16px 40px rgba(62, 54, 46, 0.06)'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
@@ -4111,11 +4541,11 @@ export default function App() {
                       height: '72px', 
                       borderRadius: '50%', 
                       padding: '3px', 
-                      background: 'linear-gradient(135deg, var(--amber) 0%, var(--green) 50%, var(--text-primary) 100%)',
+                      background: 'linear-gradient(135deg, #6B8E23 0%, #D4A373 50%, #5F859A 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 4px 15px rgba(212, 163, 115, 0.3)'
+                      boxShadow: '0 6px 18px rgba(107, 142, 35, 0.25)'
                     }}
                   >
                     <div 
@@ -4123,7 +4553,7 @@ export default function App() {
                         width: '100%', 
                         height: '100%', 
                         borderRadius: '50%', 
-                        background: 'var(--bg-base)', 
+                        background: 'var(--bg-surface)', 
                         border: '1px solid var(--border)',
                         display: 'flex', 
                         alignItems: 'center', 
@@ -4150,7 +4580,7 @@ export default function App() {
                 <button 
                   className="btn"
                   onClick={() => supabase.auth.signOut()}
-                  style={{ background: 'var(--red-bg)', color: 'var(--red)', border: 'none', borderRadius: '12px', padding: '10px 18px', fontWeight: 800 }}
+                  style={{ background: 'rgba(192, 92, 92, 0.15)', color: 'var(--red)', border: '1px solid rgba(192, 92, 92, 0.3)', borderRadius: '14px', padding: '10px 20px', fontWeight: 800, cursor: 'pointer' }}
                 >
                   Logout Session
                 </button>
@@ -4161,32 +4591,34 @@ export default function App() {
                 <div 
                   style={{ 
                     padding: '12px 16px', 
-                    background: settingsMessage.includes('Error') ? 'var(--red-bg)' : 'var(--green-bg)', 
+                    background: settingsMessage.includes('Error') ? 'rgba(192, 92, 92, 0.15)' : 'rgba(107, 142, 35, 0.15)', 
                     color: settingsMessage.includes('Error') ? 'var(--red)' : 'var(--green)', 
-                    borderRadius: '14px', 
+                    borderRadius: '16px', 
                     fontSize: '0.88rem', 
-                    fontWeight: 700,
+                    fontWeight: 800,
                     marginBottom: '1.5rem',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    border: settingsMessage.includes('Error') ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
+                    border: settingsMessage.includes('Error') ? '1px solid rgba(192, 92, 92, 0.3)' : '1px solid rgba(107, 142, 35, 0.3)'
                   }}
                 >
                   <CheckCircle size={16}/> {settingsMessage}
                 </div>
               )}
 
-              {/* Instagram-Style Settings 2-Column Split Card */}
+              {/* Glass 2-Column Split Card */}
               <div 
                 style={{ 
-                  background: 'var(--bg-secondary)', 
-                  border: '1px solid var(--border)', 
-                  borderRadius: 'var(--r-xl)', 
+                  background: 'rgba(255, 255, 255, 0.85)', 
+                  backdropFilter: 'blur(32px)',
+                  WebkitBackdropFilter: 'blur(32px)',
+                  border: '1px solid rgba(107, 142, 35, 0.2)', 
+                  borderRadius: '24px', 
                   display: 'grid', 
                   gridTemplateColumns: '240px 1fr',
-                  minHeight: '420px',
-                  boxShadow: 'var(--shadow-sm)',
+                  minHeight: '450px',
+                  boxShadow: '0 20px 60px rgba(62, 54, 46, 0.08)',
                   overflow: 'hidden'
                 }}
               >
@@ -4195,7 +4627,7 @@ export default function App() {
                   style={{ 
                     borderRight: '1px solid var(--border)', 
                     padding: '1.25rem 0.75rem', 
-                    background: 'var(--bg-base)',
+                    background: 'rgba(247, 244, 238, 0.5)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '6px'
@@ -4208,19 +4640,19 @@ export default function App() {
                       alignItems: 'center',
                       gap: '12px',
                       padding: '12px 16px',
-                      borderRadius: '12px',
+                      borderRadius: '14px',
                       border: 'none',
-                      background: settingsTab === 'profile' ? 'var(--bg-secondary)' : 'transparent',
-                      color: settingsTab === 'profile' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      background: settingsTab === 'profile' ? 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)' : 'rgba(255, 255, 255, 0.4)',
+                      color: settingsTab === 'profile' ? '#FFFFFF' : 'var(--text-secondary)',
                       fontWeight: settingsTab === 'profile' ? 800 : 600,
                       fontSize: '0.9rem',
                       cursor: 'pointer',
-                      boxShadow: settingsTab === 'profile' ? 'var(--shadow-xs)' : 'none',
+                      boxShadow: settingsTab === 'profile' ? '0 6px 18px rgba(107, 142, 35, 0.3)' : 'none',
                       textAlign: 'left',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    <User size={18} style={{ color: settingsTab === 'profile' ? 'var(--green)' : 'var(--text-muted)' }}/>
+                    <User size={18} style={{ color: settingsTab === 'profile' ? '#FFFFFF' : 'var(--green)' }}/>
                     <span>Edit Profile</span>
                   </button>
 
@@ -4231,19 +4663,19 @@ export default function App() {
                       alignItems: 'center',
                       gap: '12px',
                       padding: '12px 16px',
-                      borderRadius: '12px',
+                      borderRadius: '14px',
                       border: 'none',
-                      background: settingsTab === 'security' ? 'var(--bg-secondary)' : 'transparent',
-                      color: settingsTab === 'security' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      background: settingsTab === 'security' ? 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)' : 'rgba(255, 255, 255, 0.4)',
+                      color: settingsTab === 'security' ? '#FFFFFF' : 'var(--text-secondary)',
                       fontWeight: settingsTab === 'security' ? 800 : 600,
                       fontSize: '0.9rem',
                       cursor: 'pointer',
-                      boxShadow: settingsTab === 'security' ? 'var(--shadow-xs)' : 'none',
+                      boxShadow: settingsTab === 'security' ? '0 6px 18px rgba(107, 142, 35, 0.3)' : 'none',
                       textAlign: 'left',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    <Shield size={18} style={{ color: settingsTab === 'security' ? 'var(--blue)' : 'var(--text-muted)' }}/>
+                    <Shield size={18} style={{ color: settingsTab === 'security' ? '#FFFFFF' : 'var(--blue)' }}/>
                     <span>Security & Password</span>
                   </button>
 
@@ -4254,19 +4686,19 @@ export default function App() {
                       alignItems: 'center',
                       gap: '12px',
                       padding: '12px 16px',
-                      borderRadius: '12px',
+                      borderRadius: '14px',
                       border: 'none',
-                      background: settingsTab === 'data' ? 'var(--bg-secondary)' : 'transparent',
-                      color: settingsTab === 'data' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      background: settingsTab === 'data' ? 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)' : 'rgba(255, 255, 255, 0.4)',
+                      color: settingsTab === 'data' ? '#FFFFFF' : 'var(--text-secondary)',
                       fontWeight: settingsTab === 'data' ? 800 : 600,
                       fontSize: '0.9rem',
                       cursor: 'pointer',
-                      boxShadow: settingsTab === 'data' ? 'var(--shadow-xs)' : 'none',
+                      boxShadow: settingsTab === 'data' ? '0 6px 18px rgba(107, 142, 35, 0.3)' : 'none',
                       textAlign: 'left',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    <Database size={18} style={{ color: settingsTab === 'data' ? 'var(--purple)' : 'var(--text-muted)' }}/>
+                    <Database size={18} style={{ color: settingsTab === 'data' ? '#FFFFFF' : 'var(--purple)' }}/>
                     <span>Data & Backup</span>
                   </button>
 
@@ -4277,19 +4709,19 @@ export default function App() {
                       alignItems: 'center',
                       gap: '12px',
                       padding: '12px 16px',
-                      borderRadius: '12px',
+                      borderRadius: '14px',
                       border: 'none',
-                      background: settingsTab === 'about' ? 'var(--bg-secondary)' : 'transparent',
-                      color: settingsTab === 'about' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      background: settingsTab === 'about' ? 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)' : 'rgba(255, 255, 255, 0.4)',
+                      color: settingsTab === 'about' ? '#FFFFFF' : 'var(--text-secondary)',
                       fontWeight: settingsTab === 'about' ? 800 : 600,
                       fontSize: '0.9rem',
                       cursor: 'pointer',
-                      boxShadow: settingsTab === 'about' ? 'var(--shadow-xs)' : 'none',
+                      boxShadow: settingsTab === 'about' ? '0 6px 18px rgba(107, 142, 35, 0.3)' : 'none',
                       textAlign: 'left',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    <Info size={18} style={{ color: settingsTab === 'about' ? 'var(--amber)' : 'var(--text-muted)' }}/>
+                    <Info size={18} style={{ color: settingsTab === 'about' ? '#FFFFFF' : 'var(--amber)' }}/>
                     <span>About</span>
                   </button>
 
@@ -4301,20 +4733,20 @@ export default function App() {
                         alignItems: 'center',
                         gap: '12px',
                         padding: '12px 16px',
-                        borderRadius: '12px',
+                        borderRadius: '14px',
                         border: 'none',
-                        background: settingsTab === 'admin' ? 'linear-gradient(135deg, rgba(212, 163, 115, 0.2) 0%, rgba(107, 142, 35, 0.15) 100%)' : 'transparent',
-                        color: settingsTab === 'admin' ? 'var(--text-primary)' : 'var(--amber)',
+                        background: settingsTab === 'admin' ? 'linear-gradient(135deg, #D4A373 0%, #B8860B 100%)' : 'rgba(212, 163, 115, 0.15)',
+                        color: settingsTab === 'admin' ? '#FFFFFF' : 'var(--amber)',
                         fontWeight: 800,
                         fontSize: '0.9rem',
                         cursor: 'pointer',
-                        boxShadow: settingsTab === 'admin' ? 'var(--shadow-xs)' : 'none',
+                        boxShadow: settingsTab === 'admin' ? '0 6px 18px rgba(212, 163, 115, 0.35)' : 'none',
                         textAlign: 'left',
-                        transition: 'all 0.15s ease',
-                        borderLeft: '4px solid var(--amber)'
+                        transition: 'all 0.2s ease',
+                        borderLeft: settingsTab === 'admin' ? 'none' : '4px solid var(--amber)'
                       }}
                     >
-                      <Shield size={18} style={{ color: 'var(--amber)' }}/>
+                      <Shield size={18} style={{ color: settingsTab === 'admin' ? '#FFFFFF' : 'var(--amber)' }}/>
                       <span>👑 Admin Panel</span>
                     </button>
                   )}
@@ -4336,11 +4768,11 @@ export default function App() {
                           <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase' }}>
                             Full Display Name
                           </label>
-                          <input 
-                            type="text" 
-                            value={settingsName} 
-                            onChange={e => setSettingsName(e.target.value)} 
-                            placeholder={session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0]} 
+                          <input
+                            type="text"
+                            value={settingsName}
+                            onChange={e => setSettingsName(e.target.value)}
+                            placeholder={session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0]}
                             style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: 700, outline: 'none' }}
                           />
                         </div>
@@ -4349,27 +4781,94 @@ export default function App() {
                           <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase' }}>
                             Email Address (Primary Account)
                           </label>
-                          <input 
-                            type="email" 
+                          <input
+                            type="email"
                             disabled
-                            value={session?.user?.email || ''} 
+                            value={session?.user?.email || ''}
                             style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 700, cursor: 'not-allowed' }}
                           />
                           <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Email address is linked to your Supabase Auth account.</span>
                         </div>
 
-                        <button 
-                          type="submit" 
+                        <button
+                          type="submit"
                           className="btn btn-primary"
                           style={{ padding: '12px 20px', borderRadius: '12px', fontWeight: 800, marginTop: '0.5rem', alignSelf: 'flex-start' }}
                         >
                           Save Profile Changes
                         </button>
                       </form>
+
+                      {/* Appearance: Navbar Quick Links Toggle */}
+                      <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '420px' }}>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Quick Links in Navbar</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Pinned links ko sidebar mein show karo</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const next = !showNavLinks;
+                            setShowNavLinks(next);
+                            localStorage.setItem('fb_show_nav_links', next);
+                          }}
+                          style={{
+                            width: '48px',
+                            height: '26px',
+                            borderRadius: '99px',
+                            border: 'none',
+                            background: showNavLinks ? 'var(--green)' : 'var(--border-strong)',
+                            position: 'relative',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s ease',
+                            flexShrink: 0
+                          }}
+                        >
+                          <div style={{
+                            position: 'absolute',
+                            top: '3px',
+                            left: showNavLinks ? '25px' : '3px',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            background: '#ffffff',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                            transition: 'left 0.2s ease'
+                          }}/>
+                        </button>
+                      </div>
+
+                      {/* Incomes in Navbar Toggle */}
+                      <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '420px' }}>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Incomes Tab in Navbar</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Incomes ko sidebar navigation mein dikhao</div>
+                        </div>
+                        <button
+                          onClick={() => { const n = !showIncomesNav; setShowIncomesNav(n); localStorage.setItem('fb_show_incomes_nav', n); }}
+                          style={{ width: '48px', height: '26px', borderRadius: '99px', border: 'none', background: showIncomesNav ? 'var(--green)' : 'var(--border-strong)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s ease', flexShrink: 0 }}
+                        >
+                          <div style={{ position: 'absolute', top: '3px', left: showIncomesNav ? '25px' : '3px', width: '20px', height: '20px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'left 0.2s ease' }}/>
+                        </button>
+                      </div>
+
+                      {/* Expenses in Navbar Toggle */}
+                      <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '420px' }}>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Expenses Tab in Navbar</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Expenses ko sidebar navigation mein dikhao</div>
+                        </div>
+                        <button
+                          onClick={() => { const n = !showExpensesNav; setShowExpensesNav(n); localStorage.setItem('fb_show_expenses_nav', n); }}
+                          style={{ width: '48px', height: '26px', borderRadius: '99px', border: 'none', background: showExpensesNav ? 'var(--green)' : 'var(--border-strong)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s ease', flexShrink: 0 }}
+                        >
+                          <div style={{ position: 'absolute', top: '3px', left: showExpensesNav ? '25px' : '3px', width: '20px', height: '20px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'left 0.2s ease' }}/>
+                        </button>
+                      </div>
                     </div>
                   )}
 
                   {/* TAB 2: SECURITY & PASSWORD */}
+
                   {settingsTab === 'security' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                       <div>
@@ -4506,7 +5005,7 @@ export default function App() {
                               onChange={(e) => {
                                 const file = e.target.files[0];
                                 if (file) {
-                                  if (confirm(`Import and merge data from "${file.name}" into Finance Buddy?`)) {
+                                  if (confirm(`Import and merge data from "${file.name}" into Surbhi Telecom?`)) {
                                     importDataJSON(file, 'merge');
                                   }
                                   e.target.value = '';
@@ -4544,8 +5043,8 @@ export default function App() {
                   {settingsTab === 'about' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                       <div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Finance Buddy</h3>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Premium Personal Wealth & Budgeting Dashboard</p>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Surbhi Telecom</h3>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Smart Business & Wealth Management Dashboard</p>
                       </div>
 
                       <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
@@ -4558,147 +5057,220 @@ export default function App() {
                   )}
 
                   {/* TAB 5: ADMIN CONTROL CENTER */}
+                  {/* TAB: ADMIN CONTROL CENTER */}
                   {settingsTab === 'admin' && isAdmin && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                      
+                      {/* Admin Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                         <div>
-                          <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            👑 Admin Control Center
+                          <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            👑 Master Command Center
                           </h3>
-                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Super-Admin overview of all registered users & transactions</p>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0 0', fontWeight: 600 }}>Real-time Super-Admin system metrics & user account manager</p>
                         </div>
                         <button 
                           className="btn"
-                          style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 700 }}
+                          style={{
+                            background: 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '10px 18px',
+                            borderRadius: '14px',
+                            fontSize: '0.85rem',
+                            fontWeight: 800,
+                            boxShadow: '0 6px 18px rgba(107, 142, 35, 0.25)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
                           onClick={fetchAdminOverviewData}
                         >
-                          {adminLoading ? <Loader className="animate-spin" size={14}/> : <RefreshCw size={14}/>} Refresh Data
+                          {adminLoading ? <Loader className="animate-spin" size={15}/> : <RefreshCw size={15}/>} Sync Real-Time Data
                         </button>
                       </div>
 
-                      {/* System Global Metric Cards */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                        <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid var(--border)' }}>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>👥 Total Users</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: 4 }}>{adminData.profiles.length}</div>
+                      {/* System Global Metric Cards Grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
+                        <div style={{ background: 'rgba(255, 255, 255, 0.9)', padding: '1.15rem 1.25rem', borderRadius: '18px', border: '1px solid rgba(107, 142, 35, 0.2)', boxShadow: '0 8px 24px rgba(62, 54, 46, 0.04)' }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👥 Total Users</span>
+                          <div style={{ fontSize: '1.85rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: 4 }}>{adminData.profiles.length}</div>
                         </div>
 
-                        <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid var(--border)' }}>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase' }}>🟢 System Incomes</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--green)', marginTop: 4 }}>{fmt(adminData.incomes.reduce((s, i) => s + Number(i.amount || 0), 0))}</div>
+                        <div style={{ background: 'rgba(107, 142, 35, 0.08)', padding: '1.15rem 1.25rem', borderRadius: '18px', border: '1px solid rgba(107, 142, 35, 0.2)', boxShadow: '0 8px 24px rgba(107, 142, 35, 0.04)' }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🟢 System Incomes</span>
+                          <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--green)', marginTop: 4 }}>{fmt(adminData.incomes.reduce((s, i) => s + Number(i.amount || 0), 0))}</div>
                         </div>
 
-                        <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid var(--border)' }}>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--red)', textTransform: 'uppercase' }}>🔴 System Expenses</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--red)', marginTop: 4 }}>{fmt(adminData.expenses.reduce((s, e) => s + Number(e.amount || 0), 0))}</div>
+                        <div style={{ background: 'rgba(192, 92, 92, 0.08)', padding: '1.15rem 1.25rem', borderRadius: '18px', border: '1px solid rgba(192, 92, 92, 0.2)', boxShadow: '0 8px 24px rgba(192, 92, 92, 0.04)' }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🔴 System Expenses</span>
+                          <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--red)', marginTop: 4 }}>{fmt(adminData.expenses.reduce((s, e) => s + Number(e.amount || 0), 0))}</div>
                         </div>
 
-                        <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid var(--border)' }}>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--amber)', textTransform: 'uppercase' }}>💳 Total Cards</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--amber)', marginTop: 4 }}>{adminData.creditCards.length}</div>
+                        <div style={{ background: 'rgba(212, 163, 115, 0.08)', padding: '1.15rem 1.25rem', borderRadius: '18px', border: '1px solid rgba(212, 163, 115, 0.2)', boxShadow: '0 8px 24px rgba(212, 163, 115, 0.04)' }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--amber)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💳 Total Cards</span>
+                          <div style={{ fontSize: '1.85rem', fontWeight: 900, color: 'var(--amber)', marginTop: 4 }}>{adminData.creditCards.length}</div>
                         </div>
                       </div>
 
-                      {/* Registered Users Cards List */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                          Registered Users Overview ({adminData.profiles.length})
-                        </div>
-                        {adminData.profiles.map(prof => {
-                          const userIncs = adminData.incomes.filter(i => i.user_id === prof.id);
-                          const userExps = adminData.expenses.filter(e => e.user_id === prof.id);
-                          const userCards = adminData.creditCards.filter(c => c.user_id === prof.id);
-                          const incTotal = userIncs.reduce((s, i) => s + Number(i.amount || 0), 0);
-                          const expTotal = userExps.reduce((s, e) => s + Number(e.amount || 0), 0);
+                      {/* Live User Search Bar */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-surface)', padding: '10px 16px', borderRadius: '16px', border: '1px solid var(--border-strong)' }}>
+                        <Search size={18} style={{ color: 'var(--text-muted)' }} />
+                        <input
+                          type="text"
+                          value={adminSearchQuery}
+                          onChange={e => setAdminSearchQuery(e.target.value)}
+                          placeholder="Search users by name, email, or account ID..."
+                          style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}
+                        />
+                        {adminSearchQuery && (
+                          <button onClick={() => setAdminSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
 
-                          return (
-                            <div 
-                              key={prof.id} 
-                              style={{ 
-                                background: 'var(--bg-base)', 
-                                border: '1px solid var(--border)', 
-                                borderRadius: '16px', 
-                                padding: '1.25rem', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'space-between',
-                                flexWrap: 'wrap',
-                                gap: '1rem'
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '200px' }}>
-                                <div style={{ 
-                                  width: '46px', 
-                                  height: '46px', 
-                                  borderRadius: '50%', 
-                                  background: 'linear-gradient(135deg, var(--amber) 0%, var(--green) 100%)', 
-                                  color: '#ffffff', 
+                      {/* Registered User Accounts Cards List */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>Registered Accounts ({adminData.profiles.length})</span>
+                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Click "View Live Dashboard" to inspect user's view</span>
+                        </div>
+
+                        {adminData.profiles
+                          .filter(prof => {
+                            if (!adminSearchQuery) return true;
+                            const q = adminSearchQuery.toLowerCase();
+                            return (prof.full_name || '').toLowerCase().includes(q) || (prof.email || '').toLowerCase().includes(q) || (prof.id || '').toLowerCase().includes(q);
+                          })
+                          .map(prof => {
+                            const userIncs = adminData.incomes.filter(i => i.user_id === prof.id);
+                            const userExps = adminData.expenses.filter(e => e.user_id === prof.id);
+                            const userCards = adminData.creditCards.filter(c => c.user_id === prof.id);
+                            const userBnks = adminData.banks.filter(b => b.user_id === prof.id);
+                            const incTotal = userIncs.reduce((s, i) => s + Number(i.amount || 0), 0);
+                            const expTotal = userExps.reduce((s, e) => s + Number(e.amount || 0), 0);
+                            const netBal = incTotal - expTotal;
+
+                            return (
+                              <div 
+                                key={prof.id} 
+                                style={{ 
+                                  background: 'rgba(255, 255, 255, 0.9)', 
+                                  border: '1px solid rgba(107, 142, 35, 0.2)', 
+                                  borderRadius: '20px', 
+                                  padding: '1.25rem 1.5rem', 
                                   display: 'flex', 
                                   alignItems: 'center', 
-                                  justifyContent: 'center', 
-                                  fontWeight: 900, 
-                                  fontSize: '1.2rem',
-                                  flexShrink: 0
-                                }}>
-                                  {(prof.full_name || prof.email || 'U').charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                  <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--text-primary)' }}>
-                                    {prof.full_name || 'Registered User'}
+                                  justifyContent: 'space-between',
+                                  flexWrap: 'wrap',
+                                  gap: '1.25rem',
+                                  boxShadow: '0 10px 30px rgba(62, 54, 46, 0.05)'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '220px' }}>
+                                  <div style={{ 
+                                    width: '48px', 
+                                    height: '48px', 
+                                    borderRadius: '50%', 
+                                    background: 'linear-gradient(135deg, #6B8E23 0%, #D4A373 100%)', 
+                                    color: '#ffffff', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    fontWeight: 900, 
+                                    fontSize: '1.2rem',
+                                    flexShrink: 0,
+                                    boxShadow: '0 6px 16px rgba(107, 142, 35, 0.25)'
+                                  }}>
+                                    {(prof.full_name || prof.email || 'U').charAt(0).toUpperCase()}
                                   </div>
-                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, marginTop: '2px' }}>
-                                    {prof.email}
+                                  <div>
+                                    <div style={{ fontWeight: 900, fontSize: '1.02rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      {prof.full_name || 'Registered User'}
+                                      {prof.email && prof.email.toLowerCase() === MASTER_SUPER_ADMIN && (
+                                        <span style={{ fontSize: '0.7rem', background: 'rgba(212, 163, 115, 0.2)', color: 'var(--amber)', padding: '2px 8px', borderRadius: '99px', fontWeight: 800 }}>Master Admin</span>
+                                      )}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, marginTop: '2px' }}>
+                                      {prof.email}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-                                <div style={{ fontSize: '0.82rem', textAlign: 'right' }}>
-                                  <span style={{ color: 'var(--green)', fontWeight: 900, display: 'block' }}>+{fmt(incTotal)} ({userIncs.length})</span>
-                                  <span style={{ color: 'var(--red)', fontWeight: 900, display: 'block', marginTop: '2px' }}>-{fmt(expTotal)} ({userExps.length})</span>
-                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                                  <div style={{ fontSize: '0.82rem', textAlign: 'right' }}>
+                                    <span style={{ color: 'var(--green)', fontWeight: 900, display: 'block' }}>+{fmt(incTotal)} ({userIncs.length})</span>
+                                    <span style={{ color: 'var(--red)', fontWeight: 900, display: 'block', marginTop: '2px' }}>-{fmt(expTotal)} ({userExps.length})</span>
+                                  </div>
 
-                                <span className="badge" style={{ background: 'var(--amber-bg)', color: 'var(--amber)', padding: '4px 12px', borderRadius: '8px', fontWeight: 800, fontSize: '0.78rem' }}>
-                                  💳 {userCards.length} Card(s)
-                                </span>
+                                  <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Net Balance</div>
+                                    <div style={{ fontSize: '1.05rem', fontWeight: 900, color: netBal >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                                      {fmt(netBal)}
+                                    </div>
+                                  </div>
 
-                                <button 
-                                  className="btn btn-primary" 
-                                  style={{ padding: '10px 18px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 900, background: 'linear-gradient(135deg, var(--green) 0%, #059669 100%)', border: 'none', color: '#ffffff', cursor: 'pointer' }}
-                                  onClick={() => {
-                                    setImpersonatedUser(prof);
-                                    setView('dashboard');
-                                  }}
-                                >
-                                  👁️ View Live Dashboard
-                                </button>
+                                  <div style={{ display: 'flex', gap: '6px' }}>
+                                    <span style={{ background: 'rgba(212, 163, 115, 0.15)', color: 'var(--amber)', padding: '4px 10px', borderRadius: '10px', fontWeight: 800, fontSize: '0.75rem' }}>
+                                      💳 {userCards.length} Cards
+                                    </span>
+                                    <span style={{ background: 'rgba(95, 133, 154, 0.15)', color: 'var(--cyan)', padding: '4px 10px', borderRadius: '10px', fontWeight: 800, fontSize: '0.75rem' }}>
+                                      🏦 {userBnks.length} Banks
+                                    </span>
+                                  </div>
 
-                                {session?.user?.email?.toLowerCase() === MASTER_SUPER_ADMIN && prof.email && prof.email.toLowerCase() !== MASTER_SUPER_ADMIN && (
                                   <button 
-                                    className="btn" 
-                                    style={{ 
-                                      padding: '10px 16px', 
-                                      borderRadius: '12px', 
-                                      fontSize: '0.82rem', 
-                                      fontWeight: 800, 
-                                      background: extraAdminEmails.includes(prof.email.toLowerCase()) ? 'var(--red-bg)' : 'var(--purple-bg)', 
-                                      color: extraAdminEmails.includes(prof.email.toLowerCase()) ? 'var(--red)' : 'var(--purple)', 
-                                      border: '1px solid var(--border)', 
-                                      cursor: 'pointer' 
+                                    className="btn btn-primary" 
+                                    style={{
+                                      padding: '10px 18px',
+                                      borderRadius: '14px',
+                                      fontSize: '0.85rem',
+                                      fontWeight: 900,
+                                      background: 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)',
+                                      border: 'none',
+                                      color: '#ffffff',
+                                      cursor: 'pointer',
+                                      boxShadow: '0 6px 18px rgba(107, 142, 35, 0.25)',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px'
                                     }}
-                                    onClick={() => toggleSuperAdminRole(prof.email)}
+                                    onClick={() => {
+                                      setImpersonatedUser(prof);
+                                      setView('dashboard');
+                                    }}
                                   >
-                                    {extraAdminEmails.includes(prof.email.toLowerCase()) ? '❌ Revoke Super Admin' : '👑 Appoint Super Admin'}
+                                    👁️ View Live Dashboard
                                   </button>
-                                )}
+
+                                  {session?.user?.email?.toLowerCase() === MASTER_SUPER_ADMIN && prof.email && prof.email.toLowerCase() !== MASTER_SUPER_ADMIN && (
+                                    <button 
+                                      className="btn" 
+                                      style={{ 
+                                        padding: '10px 16px', 
+                                        borderRadius: '14px', 
+                                        fontSize: '0.82rem', 
+                                        fontWeight: 800, 
+                                        background: extraAdminEmails.includes(prof.email.toLowerCase()) ? 'rgba(192, 92, 92, 0.15)' : 'rgba(142, 114, 152, 0.15)', 
+                                        color: extraAdminEmails.includes(prof.email.toLowerCase()) ? 'var(--red)' : 'var(--purple)', 
+                                        border: extraAdminEmails.includes(prof.email.toLowerCase()) ? '1px solid rgba(192, 92, 92, 0.3)' : '1px solid rgba(142, 114, 152, 0.3)', 
+                                        cursor: 'pointer' 
+                                      }}
+                                      onClick={() => toggleSuperAdminRole(prof.email)}
+                                    >
+                                      {extraAdminEmails.includes(prof.email.toLowerCase()) ? '❌ Revoke Admin' : '👑 Make Admin'}
+                                    </button>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
 
                         {adminData.profiles.length === 0 && (
-                          <div style={{ background: 'var(--bg-base)', padding: '2rem', textAlign: 'center', borderRadius: '14px', border: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                            No user accounts found. Click "Refresh Data" above!
+                          <div style={{ background: 'rgba(255, 255, 255, 0.8)', padding: '2.5rem', textAlign: 'center', borderRadius: '20px', border: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>
+                            No user accounts found. Click "Sync Real-Time Data" above!
                           </div>
                         )}
                       </div>
