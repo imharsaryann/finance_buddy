@@ -1918,6 +1918,7 @@ export default function App() {
           supabase.from('samiti_payments').delete().eq('user_id', userId),
           supabase.from('cc_logs').delete().eq('user_id', userId),
           supabase.from('vault_logs').delete().eq('user_id', userId),
+          supabase.from('web_apps').delete().eq('user_id', userId),
           supabase.from('profiles').update({ cash: 0, vault_target: 0 }).eq('id', userId)
         ]);
       }
@@ -1934,7 +1935,8 @@ export default function App() {
         'fb_cc_logs',
         'personal_vault_logs',
         'personal_vault_target',
-        'fb_bank_pins'
+        'fb_bank_pins',
+        'fb_web_apps'
       ];
       storageKeys.forEach(k => localStorage.removeItem(k));
 
@@ -1947,13 +1949,14 @@ export default function App() {
       setSamitiPayments([]);
       setCcLogs([]);
       setVaultLogs([]);
+      setWebApps([]);
       setCash(0);
       setVaultTarget(0);
 
       if (showNotification) {
         setImportStatus({
           type: 'success',
-          message: 'All old data, Supabase cloud records & local backups cleared successfully!'
+          message: 'All old data, web app shortcuts, Supabase cloud records & local backups cleared successfully!'
         });
       }
       return true;
