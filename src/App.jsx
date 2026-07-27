@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Home, PieChart, TrendingUp, TrendingDown, IndianRupee,
   Users, CreditCard, Target, Calendar, Plus, Trash2,
   Edit3, Eye, CalendarCheck, ArrowRightLeft, X, Wallet, Pin,
   Building, CheckCircle, AlertTriangle, ChevronLeft, ChevronRight,
   BarChart2, ArrowUpRight, ArrowDownRight, Menu, Loader, User, Minus, Briefcase, Clock, Shield, Info, Mail, Lock,
-  Download, Upload, FileText, Database, RefreshCw, Settings, MoreVertical, Sparkles, Globe, ExternalLink, Search, Star
+  Download, Upload, FileText, Database, RefreshCw, Settings, MoreVertical, Sparkles, Globe, ExternalLink, Search, Star,
+  StickyNote, PinOff, Palette, Archive, Hash
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -457,6 +458,150 @@ const SamitiDayGrid = ({ samiti, payments, togglePayment, markBulk, activeMonth 
     </div>
   );
 };
+
+
+// ─────────────────────────────────────────────
+//   NOTE CARD COMPONENT
+// ─────────────────────────────────────────────
+function NoteCard({ note, noteBg, NOTE_COLORS, noteColorPicker, setNoteColorPicker, openNoteModal, toggleNotePin, deleteNote, changeNoteColor }) {
+  const bg = noteBg(note.color);
+  const isPickerOpen = noteColorPicker === note.id;
+
+  return (
+    <div
+      style={{
+        background: bg,
+        border: '1.5px solid var(--border)',
+        borderRadius: '16px',
+        padding: '14px 16px',
+        marginBottom: '1rem',
+        breakInside: 'avoid',
+        boxShadow: 'var(--shadow-xs)',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+        cursor: 'pointer',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+      }}
+      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,0.25)'}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--shadow-xs)'; }}
+      onClick={() => openNoteModal(note)}
+    >
+      {/* Title */}
+      {note.title && (
+        <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+          {note.title}
+        </div>
+      )}
+
+      {/* Body preview */}
+      {note.body && (
+        <div style={{
+          fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.65,
+          display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+        }}>
+          {note.body}
+        </div>
+      )}
+
+      {/* Tags */}
+      {(note.tags || []).length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '2px' }}>
+          {note.tags.map(tag => (
+            <span key={tag} style={{
+              background: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)',
+              fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px',
+              border: '1px solid var(--border)'
+            }}>
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Action buttons - show on hover */}
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          display: 'flex', gap: '4px', marginTop: '4px',
+          borderTop: '1px solid var(--border)', paddingTop: '8px'
+        }}
+      >
+        {/* Pin toggle */}
+        <button
+          title={note.is_pinned ? 'Unpin' : 'Pin'}
+          onClick={e => { e.stopPropagation(); toggleNotePin(note); }}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer', padding: '5px 7px',
+            color: note.is_pinned ? 'var(--accent)' : 'var(--text-muted)', borderRadius: '8px',
+            transition: 'background 0.15s'
+          }}
+        >
+          <Pin size={14} fill={note.is_pinned ? 'var(--accent)' : 'none'} />
+        </button>
+
+        {/* Color picker trigger */}
+        <div style={{ position: 'relative' }}>
+          <button
+            title="Change color"
+            onClick={e => { e.stopPropagation(); setNoteColorPicker(isPickerOpen ? null : note.id); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 7px', color: 'var(--text-muted)', borderRadius: '8px', transition: 'background 0.15s' }}
+          >
+            <Palette size={14} />
+          </button>
+          {isPickerOpen && (
+            <div
+              style={{
+                position: 'absolute', bottom: '32px', left: 0, background: 'var(--bg-surface)',
+                border: '1px solid var(--border)', borderRadius: '12px', padding: '8px',
+                display: 'flex', flexWrap: 'wrap', gap: '5px', width: '160px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 200
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              {NOTE_COLORS.map(c => (
+                <button
+                  key={c.id}
+                  title={c.label}
+                  onClick={e => { e.stopPropagation(); changeNoteColor(note, c.id); }}
+                  style={{
+                    width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer',
+                    background: c.id === 'default' ? 'var(--bg-base)' : c.bg,
+                    border: note.color === c.id ? '2.5px solid var(--accent)' : '1.5px solid var(--border)'
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Edit button */}
+        <button
+          title="Edit"
+          onClick={e => { e.stopPropagation(); openNoteModal(note); }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 7px', color: 'var(--text-muted)', borderRadius: '8px', transition: 'background 0.15s' }}
+        >
+          <Edit3 size={14} />
+        </button>
+
+        {/* Delete */}
+        <button
+          title="Delete"
+          onClick={e => { e.stopPropagation(); deleteNote(note.id); }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 7px', color: 'var(--text-muted)', borderRadius: '8px', transition: 'background 0.15s', marginLeft: 'auto' }}
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+
+      {/* Updated time */}
+      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textAlign: 'right', marginTop: '-4px' }}>
+        {new Date(note.updated_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+      </div>
+    </div>
+  );
+}
 
 
 // ─────────────────────────────────────────────
@@ -2594,6 +2739,134 @@ export default function App() {
     );
   }
 
+  // ─────────────────────────────────────────────
+  // NOTES — Google Keep style
+  // ─────────────────────────────────────────────
+  const NOTE_COLORS = [
+    { id: 'default', bg: 'var(--bg-surface)', label: 'Default' },
+    { id: 'red',     bg: '#4a1f1f',           label: 'Red' },
+    { id: 'orange',  bg: '#3d2810',           label: 'Orange' },
+    { id: 'yellow',  bg: '#3d3510',           label: 'Yellow' },
+    { id: 'green',   bg: '#1a3325',           label: 'Green' },
+    { id: 'teal',    bg: '#0f2e2e',           label: 'Teal' },
+    { id: 'blue',    bg: '#0f1f3d',           label: 'Blue' },
+    { id: 'purple',  bg: '#2a1040',           label: 'Purple' },
+    { id: 'pink',    bg: '#3d1030',           label: 'Pink' },
+    { id: 'brown',   bg: '#2a1a0a',           label: 'Brown' },
+    { id: 'gray',    bg: '#252525',           label: 'Gray' },
+  ];
+
+  const [notes, setNotes] = useState([]);
+  const [noteSearch, setNoteSearch] = useState('');
+  const [activeNoteFilter, setActiveNoteFilter] = useState('all'); // 'all' | 'pinned' | tag
+  const [noteModal, setNoteModal] = useState({ open: false, note: null }); // null = new note
+  const [noteForm, setNoteForm] = useState({ title: '', body: '', color: 'default', tags: '', is_pinned: false });
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteColorPicker, setNoteColorPicker] = useState(null); // note id showing picker
+
+  // Load notes from Supabase on login
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const fetchNotes = async () => {
+      const { data } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('is_pinned', { ascending: false })
+        .order('updated_at', { ascending: false });
+      if (data) setNotes(data);
+    };
+    fetchNotes();
+  }, [session]);
+
+  const openNoteModal = (note = null) => {
+    if (note) {
+      setNoteForm({
+        title: note.title || '',
+        body: note.body || '',
+        color: note.color || 'default',
+        tags: (note.tags || []).join(', '),
+        is_pinned: note.is_pinned || false
+      });
+    } else {
+      setNoteForm({ title: '', body: '', color: 'default', tags: '', is_pinned: false });
+    }
+    setNoteModal({ open: true, note });
+  };
+
+  const saveNote = async () => {
+    if (!noteForm.title.trim() && !noteForm.body.trim()) return;
+    setNoteSaving(true);
+    const userId = session?.user?.id;
+    const tagsList = noteForm.tags.split(',').map(t => t.trim()).filter(Boolean);
+    const now = new Date().toISOString();
+    try {
+      if (noteModal.note) {
+        // UPDATE
+        const updates = {
+          title: noteForm.title,
+          body: noteForm.body,
+          color: noteForm.color,
+          tags: tagsList,
+          is_pinned: noteForm.is_pinned,
+          updated_at: now
+        };
+        setNotes(prev => prev.map(n => n.id === noteModal.note.id ? { ...n, ...updates } : n)
+          .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)));
+        if (userId) {
+          await supabase.from('notes').update(updates).eq('id', noteModal.note.id);
+        }
+      } else {
+        // INSERT
+        const newNote = {
+          id: crypto.randomUUID(),
+          user_id: userId,
+          title: noteForm.title,
+          body: noteForm.body,
+          color: noteForm.color,
+          tags: tagsList,
+          is_pinned: noteForm.is_pinned,
+          is_archived: false,
+          created_at: now,
+          updated_at: now
+        };
+        setNotes(prev => [newNote, ...prev].sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)));
+        if (userId) {
+          const { data } = await supabase.from('notes').insert([newNote]).select();
+          if (data?.[0]) setNotes(prev => prev.map(n => n.id === newNote.id ? data[0] : n));
+        }
+      }
+      setNoteModal({ open: false, note: null });
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
+  const deleteNote = async (id) => {
+    setNotes(prev => prev.filter(n => n.id !== id));
+    if (session?.user?.id) {
+      await supabase.from('notes').delete().eq('id', id);
+    }
+  };
+
+  const toggleNotePin = async (note) => {
+    const updated = { is_pinned: !note.is_pinned, updated_at: new Date().toISOString() };
+    setNotes(prev => prev.map(n => n.id === note.id ? { ...n, ...updated } : n)
+      .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)));
+    if (session?.user?.id) {
+      await supabase.from('notes').update(updated).eq('id', note.id);
+    }
+  };
+
+  const changeNoteColor = async (note, colorId) => {
+    const updated = { color: colorId, updated_at: new Date().toISOString() };
+    setNotes(prev => prev.map(n => n.id === note.id ? { ...n, ...updated } : n));
+    setNoteColorPicker(null);
+    if (session?.user?.id) {
+      await supabase.from('notes').update(updated).eq('id', note.id);
+    }
+  };
+
   const navItems = [
     { id: 'web-apps', label: 'Links', icon: <Globe size={18}/> },
     { id: 'dashboard', label: 'Dashboard', icon: <Home size={18}/> },
@@ -2603,6 +2876,7 @@ export default function App() {
     { id: 'credit-cards', label: 'Credit Cards', icon: <CreditCard size={18}/> },
     { id: 'borrowers', label: 'Khata / Udhar', icon: <Users size={18}/> },
     { id: 'samiti', label: 'Samiti', icon: <Target size={18}/> },
+    { id: 'notes', label: 'Notes', icon: <StickyNote size={18}/> },
     { id: 'personal', label: 'Personal', icon: <Shield size={18}/> }
   ];
 
@@ -4787,6 +5061,243 @@ export default function App() {
                     )
                   )}
                 </div>
+              </div>
+            );
+          })()}
+
+          {/* ══ NOTES PAGE (Google Keep Style) ══ */}
+          {view === 'notes' && (() => {
+            const allTags = [...new Set(notes.flatMap(n => n.tags || []))].filter(Boolean);
+            const filtered = notes.filter(n => {
+              if (n.is_archived) return false;
+              const q = noteSearch.toLowerCase();
+              const matchSearch = !q || (n.title || '').toLowerCase().includes(q) || (n.body || '').toLowerCase().includes(q) || (n.tags || []).some(t => t.toLowerCase().includes(q));
+              const matchFilter = activeNoteFilter === 'all' ? true : activeNoteFilter === 'pinned' ? n.is_pinned : (n.tags || []).includes(activeNoteFilter);
+              return matchSearch && matchFilter;
+            });
+            const pinned = filtered.filter(n => n.is_pinned);
+            const others = filtered.filter(n => !n.is_pinned);
+            const noteBg = (colorId) => NOTE_COLORS.find(c => c.id === colorId)?.bg || 'var(--bg-surface)';
+
+            return (
+              <div className="fade-in-view">
+                {/* Header */}
+                <div className="page-header" style={{ marginBottom: '1.5rem' }}>
+                  <div className="page-header-left">
+                    <span className="eyebrow" style={{ color: 'var(--accent)', fontWeight: 800 }}>CLOUD SYNCED</span>
+                    <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <StickyNote size={28} style={{ color: 'var(--yellow, #f0c040)' }}/> Notes
+                    </h1>
+                  </div>
+                  <div className="page-header-right" style={{ gap: '10px' }}>
+                    {/* Search bar */}
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <Search size={14} style={{ position: 'absolute', left: '10px', color: 'var(--text-muted)' }} />
+                      <input
+                        value={noteSearch}
+                        onChange={e => setNoteSearch(e.target.value)}
+                        placeholder="Search notes…"
+                        style={{
+                          background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: '12px',
+                          padding: '8px 12px 8px 30px', fontSize: '0.82rem', color: 'var(--text-primary)',
+                          outline: 'none', width: '200px'
+                        }}
+                      />
+                    </div>
+                    <button className="btn btn-primary" onClick={() => openNoteModal(null)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Plus size={15}/> New Note
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tag Filter Pills */}
+                {allTags.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '1.25rem' }}>
+                    {['all', 'pinned', ...allTags].map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() => setActiveNoteFilter(tag)}
+                        style={{
+                          padding: '4px 14px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                          border: activeNoteFilter === tag ? 'none' : '1.5px solid var(--border)',
+                          background: activeNoteFilter === tag ? 'var(--accent)' : 'var(--bg-surface)',
+                          color: activeNoteFilter === tag ? '#fff' : 'var(--text-secondary)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {tag === 'pinned' ? '📌 Pinned' : tag === 'all' ? '🗂 All' : `# ${tag}`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Quick Add Strip (inline) */}
+                <div
+                  onClick={() => openNoteModal(null)}
+                  style={{
+                    background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: '16px',
+                    padding: '14px 20px', marginBottom: '1.75rem', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    boxShadow: 'var(--shadow-xs)', transition: 'box-shadow 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = 'var(--shadow-sm)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = 'var(--shadow-xs)'}
+                >
+                  <Edit3 size={16} style={{ color: 'var(--text-muted)' }} />
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Take a note…</span>
+                </div>
+
+                {notes.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)' }}>
+                    <StickyNote size={56} style={{ opacity: 0.25, marginBottom: '1rem' }} />
+                    <div style={{ fontSize: '1rem', fontWeight: 700 }}>No notes yet</div>
+                    <div style={{ fontSize: '0.82rem', marginTop: '4px' }}>Click "+ New Note" to get started</div>
+                  </div>
+                )}
+
+                {/* Pinned Notes Section */}
+                {pinned.length > 0 && (
+                  <div style={{ marginBottom: '1.75rem' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Pin size={11}/> Pinned
+                    </div>
+                    <div style={{ columns: 'auto 280px', columnGap: '1rem' }}>
+                      {pinned.map(note => (
+                        <NoteCard
+                          key={note.id}
+                          note={note}
+                          noteBg={noteBg}
+                          NOTE_COLORS={NOTE_COLORS}
+                          noteColorPicker={noteColorPicker}
+                          setNoteColorPicker={setNoteColorPicker}
+                          openNoteModal={openNoteModal}
+                          toggleNotePin={toggleNotePin}
+                          deleteNote={deleteNote}
+                          changeNoteColor={changeNoteColor}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Other Notes Section */}
+                {others.length > 0 && (
+                  <div>
+                    {pinned.length > 0 && (
+                      <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '10px' }}>
+                        Other Notes
+                      </div>
+                    )}
+                    <div style={{ columns: 'auto 280px', columnGap: '1rem' }}>
+                      {others.map(note => (
+                        <NoteCard
+                          key={note.id}
+                          note={note}
+                          noteBg={noteBg}
+                          NOTE_COLORS={NOTE_COLORS}
+                          noteColorPicker={noteColorPicker}
+                          setNoteColorPicker={setNoteColorPicker}
+                          openNoteModal={openNoteModal}
+                          toggleNotePin={toggleNotePin}
+                          deleteNote={deleteNote}
+                          changeNoteColor={changeNoteColor}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Note Edit/Create Modal */}
+                {noteModal.open && (
+                  <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)',
+                    zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+                  }} onClick={e => { if (e.target === e.currentTarget) setNoteModal({ open: false, note: null }); }}>
+                    <div style={{
+                      background: NOTE_COLORS.find(c => c.id === noteForm.color)?.bg || 'var(--bg-surface)',
+                      borderRadius: '20px', width: '100%', maxWidth: '560px',
+                      border: '1.5px solid var(--border)', boxShadow: '0 32px 80px rgba(0,0,0,0.5)',
+                      overflow: 'hidden', display: 'flex', flexDirection: 'column'
+                    }}>
+                      {/* Modal Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px 0', gap: '10px' }}>
+                        <input
+                          autoFocus
+                          placeholder="Title"
+                          value={noteForm.title}
+                          onChange={e => setNoteForm(f => ({ ...f, title: e.target.value }))}
+                          style={{
+                            flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                            fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)',
+                            fontFamily: 'inherit'
+                          }}
+                        />
+                        <button
+                          onClick={() => setNoteForm(f => ({ ...f, is_pinned: !f.is_pinned }))}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: noteForm.is_pinned ? 'var(--accent)' : 'var(--text-muted)', transition: 'color 0.2s' }}
+                          title={noteForm.is_pinned ? 'Unpin' : 'Pin'}
+                        >
+                          <Pin size={18} fill={noteForm.is_pinned ? 'var(--accent)' : 'none'} />
+                        </button>
+                      </div>
+
+                      {/* Body */}
+                      <textarea
+                        placeholder="Take a note…"
+                        value={noteForm.body}
+                        onChange={e => setNoteForm(f => ({ ...f, body: e.target.value }))}
+                        rows={8}
+                        style={{
+                          background: 'transparent', border: 'none', outline: 'none',
+                          padding: '12px 20px', fontSize: '0.9rem', color: 'var(--text-primary)',
+                          resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.65
+                        }}
+                      />
+
+                      {/* Tags */}
+                      <div style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Hash size={13} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                        <input
+                          placeholder="Tags (comma separated: work, personal, ideas)"
+                          value={noteForm.tags}
+                          onChange={e => setNoteForm(f => ({ ...f, tags: e.target.value }))}
+                          style={{
+                            flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                            fontSize: '0.78rem', color: 'var(--text-secondary)', fontFamily: 'inherit'
+                          }}
+                        />
+                      </div>
+
+                      {/* Color Picker Row */}
+                      <div style={{ padding: '8px 20px', display: 'flex', flexWrap: 'wrap', gap: '6px', borderTop: '1px solid var(--border)' }}>
+                        {NOTE_COLORS.map(c => (
+                          <button
+                            key={c.id}
+                            title={c.label}
+                            onClick={() => setNoteForm(f => ({ ...f, color: c.id }))}
+                            style={{
+                              width: '26px', height: '26px', borderRadius: '50%', cursor: 'pointer',
+                              background: c.id === 'default' ? 'var(--bg-base)' : c.bg,
+                              border: noteForm.color === c.id ? '2.5px solid var(--accent)' : '2px solid var(--border)',
+                              transition: 'border 0.15s'
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Footer Buttons */}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '12px 20px', borderTop: '1px solid var(--border)' }}>
+                        <button className="btn" onClick={() => setNoteModal({ open: false, note: null })} style={{ padding: '8px 18px', background: 'var(--bg-base)' }}>
+                          Cancel
+                        </button>
+                        <button className="btn btn-primary" onClick={saveNote} disabled={noteSaving} style={{ padding: '8px 22px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {noteSaving ? <Loader size={14} className="spin" /> : <CheckCircle size={14} />}
+                          {noteModal.note ? 'Update Note' : 'Save Note'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })()}

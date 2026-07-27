@@ -292,8 +292,32 @@ CREATE POLICY "Users manage own web_apps"    ON web_apps FOR ALL    USING (auth.
 CREATE POLICY "Admin read all web_apps"      ON web_apps FOR SELECT USING (true);
 
 
+
 -- ──────────────────────────────────────────────────────────
--- STEP 13: STORAGE BUCKET — receipts
+-- STEP 13: NOTES  (Google Keep-style notes)
+--    Cloud-synced notes with colors, pinning, and tags.
+--    Links to: profiles.id (via user_id)
+-- ──────────────────────────────────────────────────────────
+CREATE TABLE notes (
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    user_id     UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    title       TEXT        NOT NULL DEFAULT '',
+    body        TEXT        NOT NULL DEFAULT '',
+    color       TEXT        NOT NULL DEFAULT 'default',   -- 'default' | 'red' | 'blue' | 'green' | etc.
+    tags        TEXT[]      NOT NULL DEFAULT '{}',        -- Array of tag strings
+    is_pinned   BOOLEAN     NOT NULL DEFAULT false,       -- Pinned to top?
+    is_archived BOOLEAN     NOT NULL DEFAULT false        -- Archived (hidden)?
+);
+
+ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users manage own notes"   ON notes FOR ALL    USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Admin read all notes"     ON notes FOR SELECT USING (true);
+
+
+-- ──────────────────────────────────────────────────────────
+-- STEP 14: STORAGE BUCKET — receipts
 --    Stores uploaded image files:
 --    income proof, expense receipts, transaction attachments.
 -- ──────────────────────────────────────────────────────────
