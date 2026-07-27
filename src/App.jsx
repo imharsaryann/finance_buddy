@@ -700,6 +700,15 @@ export default function App() {
   const [inspectUserModal, setInspectUserModal] = useState({ open: false, user: null });
   const [impersonatedUser, setImpersonatedUser] = useState(null);
 
+  // ─── NOTES state (must be at top-level, Rules of Hooks) ───
+  const [notes, setNotes] = useState([]);
+  const [noteSearch, setNoteSearch] = useState('');
+  const [activeNoteFilter, setActiveNoteFilter] = useState('all');
+  const [noteModal, setNoteModal] = useState({ open: false, note: null });
+  const [noteForm, setNoteForm] = useState({ title: '', body: '', color: 'default', tags: '', is_pinned: false });
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteColorPicker, setNoteColorPicker] = useState(null);
+
   const fetchAdminOverviewData = async () => {
     if (!isAdmin) return;
     setAdminLoading(true);
@@ -1074,6 +1083,21 @@ export default function App() {
 
     fetchData();
   }, [session, impersonatedUser, adminData]);
+
+  // ─── Notes fetch (top-level useEffect, must stay here) ───
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const fetchNotes = async () => {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('is_pinned', { ascending: false })
+        .order('updated_at', { ascending: false });
+      if (data && !error) setNotes(data);
+    };
+    fetchNotes();
+  }, [session]);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -2755,29 +2779,6 @@ export default function App() {
     { id: 'brown',   bg: '#2a1a0a',           label: 'Brown' },
     { id: 'gray',    bg: '#252525',           label: 'Gray' },
   ];
-
-  const [notes, setNotes] = useState([]);
-  const [noteSearch, setNoteSearch] = useState('');
-  const [activeNoteFilter, setActiveNoteFilter] = useState('all'); // 'all' | 'pinned' | tag
-  const [noteModal, setNoteModal] = useState({ open: false, note: null }); // null = new note
-  const [noteForm, setNoteForm] = useState({ title: '', body: '', color: 'default', tags: '', is_pinned: false });
-  const [noteSaving, setNoteSaving] = useState(false);
-  const [noteColorPicker, setNoteColorPicker] = useState(null); // note id showing picker
-
-  // Load notes from Supabase on login
-  useEffect(() => {
-    if (!session?.user?.id) return;
-    const fetchNotes = async () => {
-      const { data } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('is_pinned', { ascending: false })
-        .order('updated_at', { ascending: false });
-      if (data) setNotes(data);
-    };
-    fetchNotes();
-  }, [session]);
 
   const openNoteModal = (note = null) => {
     if (note) {
