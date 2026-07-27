@@ -1747,6 +1747,137 @@ export default function App() {
     }
   };
 
+  const isUUID = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+
+  const downloadSampleTemplateJSON = () => {
+    const sampleData = {
+      app: 'Finance Buddy',
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      data: {
+        cash: 5000,
+        vaultTarget: 50000,
+        incomes: [
+          {
+            date: new Date().toISOString().slice(0, 10),
+            amount: 55000,
+            category: 'Salary'
+          }
+        ],
+        expenses: [
+          {
+            date: new Date().toISOString().slice(0, 10),
+            amount: 1200,
+            category: 'Food'
+          }
+        ],
+        banks: [
+          {
+            bankName: 'HDFC Bank',
+            type: 'Savings',
+            accountNumber: 'XXXX1234',
+            balance: 25000
+          }
+        ],
+        creditCards: [
+          {
+            bankName: 'ICICI Bank',
+            cardName: 'Amazon Pay',
+            cardNumber: '4321',
+            limit: 100000,
+            outstanding: 4500,
+            statementDate: '15',
+            dueDate: '05'
+          }
+        ],
+        borrowers: [
+          {
+            name: 'Ramesh Sharma',
+            principal: 5000,
+            repaid: 2000,
+            date: new Date().toISOString().slice(0, 10)
+          }
+        ]
+      }
+    };
+    const jsonStr = JSON.stringify(sampleData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Finance_Buddy_Sample_Template.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const parseCSVToPayload = (text) => {
+    if (!text || typeof text !== 'string') return null;
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length < 2) return null;
+
+    const headers = lines[0].split(',').map(h => h.replace(/^["']|["']$/g, '').trim().toLowerCase());
+    const incomes = [];
+    const expenses = [];
+    const borrowers = [];
+    const creditCards = [];
+
+    const getCol = (rowValues, ...candidates) => {
+      for (const cand of candidates) {
+        const idx = headers.findIndex(h => h.includes(cand.toLowerCase()));
+        if (idx !== -1 && rowValues[idx] !== undefined) {
+          return rowValues[idx].replace(/^["']|["']$/g, '').trim();
+        }
+      }
+      return '';
+    };
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+      if (!values || values.length === 0) continue;
+
+      const dateStr = getCol(values, 'date', 'created_at', 'day') || new Date().toISOString().slice(0, 10);
+      const amountVal = parseFloat(getCol(values, 'amount', 'principal', 'price', 'inr') || '0') || 0;
+      const categoryVal = getCol(values, 'category', 'type', 'head') || 'Others';
+      const nameVal = getCol(values, 'name', 'borrower', 'card name', 'bank') || '';
+
+      if (headers.some(h => h.includes('borrower') || h.includes('repaid') || h.includes('principal'))) {
+        const repaidVal = parseFloat(getCol(values, 'repaid') || '0') || 0;
+        borrowers.push({
+          name: nameVal || `Borrower #${i}`,
+          principal: amountVal,
+          repaid: repaidVal,
+          date: dateStr
+        });
+      } else if (headers.some(h => h.includes('limit') || h.includes('outstanding') || h.includes('card'))) {
+        const limitVal = parseFloat(getCol(values, 'limit') || '0') || 0;
+        const outstandingVal = parseFloat(getCol(values, 'outstanding') || '0') || 0;
+        creditCards.push({
+          bankName: getCol(values, 'bank') || 'Bank',
+          cardName: nameVal || 'Credit Card',
+          cardNumber: getCol(values, 'number', 'cardnumber') || 'XXXX',
+          limit: limitVal,
+          outstanding: outstandingVal,
+          statementDate: getCol(values, 'statement') || '15',
+          dueDate: getCol(values, 'due') || '05'
+        });
+      } else {
+        const isIncomeCat = INCOME_CATEGORIES.some(c => c.toLowerCase() === categoryVal.toLowerCase());
+        const typeCol = getCol(values, 'type', 'transaction_type');
+        const isIncomeType = typeCol.toLowerCase().includes('inc') || typeCol.toLowerCase().includes('credit');
+
+        if (isIncomeCat || isIncomeType) {
+          incomes.push({ date: dateStr, amount: Math.abs(amountVal), category: categoryVal || 'Others' });
+        } else {
+          expenses.push({ date: dateStr, amount: Math.abs(amountVal), category: categoryVal || 'Others' });
+        }
+      }
+    }
+
+    return { incomes, expenses, borrowers, creditCards };
+  };
+
   const importDataJSON = async (fileObj, mode = 'merge') => {
     if (!fileObj) return;
     setImporting(true);
@@ -1755,127 +1886,165 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
-          const parsed = JSON.parse(e.target.result);
-          const payload = parsed.data || parsed;
+          const fileContent = e.target.result;
+          let payload = null;
+
+          if (fileObj.name.toLowerCase().endsWith('.json') || fileContent.trim().startsWith('{') || fileContent.trim().startsWith('[')) {
+            try {
+              const parsed = JSON.parse(fileContent);
+              if (Array.isArray(parsed)) {
+                const incs = [];
+                const exps = [];
+                const ccs = [];
+                const bnks = [];
+                const bws = [];
+                parsed.forEach(item => {
+                  if (item.cardName || item.cardNumber || item.limit !== undefined) ccs.push(item);
+                  else if (item.accountNumber || item.bankName) bnks.push(item);
+                  else if (item.name && (item.principal !== undefined || item.repaid !== undefined)) bws.push(item);
+                  else if (item.amount) {
+                    if (item.type === 'income' || INCOME_CATEGORIES.includes(item.category)) incs.push(item);
+                    else exps.push(item);
+                  }
+                });
+                payload = { incomes: incs, expenses: exps, creditCards: ccs, banks: bnks, borrowers: bws };
+              } else {
+                payload = parsed.data || parsed.payload || parsed.backup || parsed;
+              }
+            } catch (jsonErr) {
+              payload = parseCSVToPayload(fileContent);
+            }
+          } else {
+            payload = parseCSVToPayload(fileContent);
+          }
 
           if (!payload || typeof payload !== 'object') {
-            throw new Error('Invalid backup file format.');
+            throw new Error('Could not recognize file format. Please upload a valid JSON or CSV backup file.');
           }
 
           const userId = session?.user?.id;
-          if (!userId) throw new Error('User session not found.');
-
-          // 1. Process Cash / Profile
-          if (typeof payload.cash === 'number') {
-            await supabase.from('profiles').upsert({ id: userId, cash: payload.cash });
-            setCash(payload.cash);
-          }
-
-          let summaryCounts = [];
 
           const prepItems = (arr) => {
             if (!Array.isArray(arr)) return [];
-            return arr.map(item => ({ ...item, user_id: userId }));
+            return arr.map(item => {
+              const copy = { ...item };
+              if (userId) copy.user_id = userId;
+              if (!copy.id || !isUUID(copy.id)) {
+                copy.id = crypto.randomUUID();
+              }
+              return copy;
+            });
           };
 
-          // 2. Incomes
-          const incList = prepItems(payload.incomes);
-          if (incList.length > 0) {
-            const { data, error } = await supabase.from('incomes').upsert(incList).select();
-            if (!error && data) {
-              setIncomes(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
-              summaryCounts.push(`${data.length} Incomes`);
+          let summaryCounts = [];
+          let errorLog = [];
+
+          const cashVal = payload.cash ?? payload.cashBalance ?? payload.profile?.cash;
+          if (typeof cashVal === 'number' && !isNaN(cashVal)) {
+            setCash(cashVal);
+            if (userId) {
+              await supabase.from('profiles').upsert({ id: userId, cash: cashVal }).catch(err => errorLog.push(err.message));
             }
           }
 
-          // 3. Expenses
-          const expList = prepItems(payload.expenses);
-          if (expList.length > 0) {
-            const { data, error } = await supabase.from('expenses').upsert(expList).select();
-            if (!error && data) {
-              setExpenses(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
-              summaryCounts.push(`${data.length} Expenses`);
-            }
-          }
+          const processTableUpsert = async (tableName, items, setFunc, summaryLabel) => {
+            const sanitized = prepItems(items);
+            if (sanitized.length === 0) return;
 
-          // 4. Banks
-          const bankList = prepItems(payload.banks);
-          if (bankList.length > 0) {
-            const { data, error } = await supabase.from('banks').upsert(bankList).select();
-            if (!error && data) {
-              setBanks(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
-              summaryCounts.push(`${data.length} Banks`);
-            }
-          }
+            let successfulCount = 0;
+            let finalItems = sanitized;
 
-          // 5. Credit Cards
-          const ccList = prepItems(payload.creditCards);
-          if (ccList.length > 0) {
-            const { data, error } = await supabase.from('credit_cards').upsert(ccList).select();
-            if (!error && data) {
-              setCreditCards(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
-              summaryCounts.push(`${data.length} Credit Cards`);
-            }
-          }
-
-          // 6. Borrowers
-          const borList = prepItems(payload.borrowers);
-          if (borList.length > 0) {
-            const { data, error } = await supabase.from('borrowers').upsert(borList).select();
-            if (!error && data) {
-              setBorrowers(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
-              summaryCounts.push(`${data.length} Khata Borrowers`);
-            }
-          }
-
-          // 7. Samitis & Payments
-          const samitiList = prepItems(payload.samitis);
-          if (samitiList.length > 0) {
-            const { data, error } = await supabase.from('samitis').upsert(samitiList).select();
-            if (!error && data) {
-              setSamitis(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
-              summaryCounts.push(`${data.length} Samitis`);
-            }
-          }
-
-          const samitiPayList = prepItems(payload.samitiPayments);
-          if (samitiPayList.length > 0) {
-            const { data, error } = await supabase.from('samiti_payments').upsert(samitiPayList).select();
-            if (!error && data) {
-              setSamitiPayments(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
-            }
-          }
-
-          // 8. CC Logs
-          const ccLogList = prepItems(payload.ccLogs);
-          if (ccLogList.length > 0) {
-            const { data, error } = await supabase.from('cc_logs').upsert(ccLogList).select();
-            if (!error && data) {
-              setCcLogs(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
-            }
-          }
-
-          // 9. Vault Target & Logs
-          if (typeof payload.vaultTarget === 'number') {
-            setVaultTarget(payload.vaultTarget);
-            localStorage.setItem('personal_vault_target', payload.vaultTarget);
-            await supabase.from('profiles').upsert({ id: userId, vault_target: payload.vaultTarget, updated_at: new Date().toISOString() });
-          }
-          if (Array.isArray(payload.vaultLogs) && payload.vaultLogs.length > 0) {
-            const vLogsList = prepItems(payload.vaultLogs);
-            const { data, error } = await supabase.from('vault_logs').upsert(vLogsList).select();
-            if (!error && data) {
-              setVaultLogs(prev => mode === 'replace' ? data : [...data, ...prev.filter(x => !data.some(d => d.id === x.id))]);
+            if (userId) {
+              const { data, error } = await supabase.from(tableName).upsert(sanitized).select();
+              if (!error && data) {
+                finalItems = data;
+                successfulCount = data.length;
+              } else {
+                if (error) errorLog.push(`${summaryLabel}: ${error.message}`);
+                const rescued = [];
+                for (const singleItem of sanitized) {
+                  const { data: sData, error: sErr } = await supabase.from(tableName).upsert(singleItem).select();
+                  if (!sErr && sData?.[0]) rescued.push(sData[0]);
+                }
+                if (rescued.length > 0) {
+                  finalItems = rescued;
+                  successfulCount = rescued.length;
+                }
+              }
             } else {
-              setVaultLogs(payload.vaultLogs);
+              successfulCount = sanitized.length;
             }
-            localStorage.setItem('personal_vault_logs', JSON.stringify(payload.vaultLogs));
+
+            if (successfulCount > 0) {
+              setFunc(prev => mode === 'replace' ? finalItems : [...finalItems, ...prev.filter(x => !finalItems.some(d => d.id === x.id))]);
+              summaryCounts.push(`${successfulCount} ${summaryLabel}`);
+            }
+          };
+
+          const rawIncomes = payload.incomes || payload.income || payload.incomesList || payload.transactions?.incomes || [];
+          await processTableUpsert('incomes', rawIncomes, setIncomes, 'Incomes');
+
+          const rawExpenses = payload.expenses || payload.expense || payload.expensesList || payload.transactions?.expenses || [];
+          await processTableUpsert('expenses', rawExpenses, setExpenses, 'Expenses');
+
+          const rawBanks = payload.banks || payload.bank || payload.bankAccounts || [];
+          await processTableUpsert('banks', rawBanks, setBanks, 'Banks');
+
+          const rawCards = payload.creditCards || payload.credit_cards || payload.cards || payload.creditCard || [];
+          await processTableUpsert('credit_cards', rawCards, setCreditCards, 'Credit Cards');
+
+          const rawBorrowers = payload.borrowers || payload.borrower || payload.khata || [];
+          await processTableUpsert('borrowers', rawBorrowers, setBorrowers, 'Khata Borrowers');
+
+          const rawSamitis = payload.samitis || payload.samiti || [];
+          await processTableUpsert('samitis', rawSamitis, setSamitis, 'Samitis');
+
+          const rawSamitiPay = payload.samitiPayments || payload.samiti_payments || [];
+          await processTableUpsert('samiti_payments', rawSamitiPay, setSamitiPayments, 'Samiti Payments');
+
+          const rawCcLogs = payload.ccLogs || payload.cc_logs || payload.cardLogs || [];
+          if (Array.isArray(rawCcLogs) && rawCcLogs.length > 0) {
+            const sanitizedLogs = rawCcLogs.map(item => {
+              const copy = { ...item };
+              if (copy.card_id && !isUUID(copy.card_id)) {
+                delete copy.card_id;
+              }
+              return copy;
+            });
+            await processTableUpsert('cc_logs', sanitizedLogs, setCcLogs, 'CC Logs');
           }
 
-          setImportStatus({
-            type: 'success',
-            message: `Data Imported Successfully! Restored: ${summaryCounts.join(', ') || 'All records updated'}`
-          });
+          const vaultTargetVal = payload.vaultTarget ?? payload.vault_target;
+          if (typeof vaultTargetVal === 'number' && !isNaN(vaultTargetVal)) {
+            setVaultTarget(vaultTargetVal);
+            localStorage.setItem('personal_vault_target', vaultTargetVal);
+            if (userId) {
+              await supabase.from('profiles').upsert({ id: userId, vault_target: vaultTargetVal, updated_at: new Date().toISOString() }).catch(() => {});
+            }
+          }
+
+          const rawVaultLogs = payload.vaultLogs || payload.vault_logs || [];
+          if (Array.isArray(rawVaultLogs) && rawVaultLogs.length > 0) {
+            await processTableUpsert('vault_logs', rawVaultLogs, setVaultLogs, 'Vault Logs');
+            localStorage.setItem('personal_vault_logs', JSON.stringify(rawVaultLogs));
+          }
+
+          if (summaryCounts.length === 0 && errorLog.length > 0) {
+            setImportStatus({
+              type: 'error',
+              message: `Import Failed: ${errorLog[0]}`
+            });
+          } else if (summaryCounts.length === 0) {
+            setImportStatus({
+              type: 'error',
+              message: 'No valid data records found in uploaded file. Please check file format or download the sample template.'
+            });
+          } else {
+            setImportStatus({
+              type: 'success',
+              message: `Data Restored Successfully! (${summaryCounts.join(', ')})`
+            });
+          }
         } catch (err) {
           setImportStatus({ type: 'error', message: 'Import Failed: ' + err.message });
         } finally {
@@ -4986,34 +5155,44 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* 3. Import & Restore JSON Backup */}
-                        <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Import Backup File (.json)</div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Restore transactions & records from a backup JSON file</div>
-                          </div>
-                          <label 
-                            className="btn" 
-                            style={{ background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer' }}
-                          >
-                            {importing ? <Loader className="animate-spin" size={14}/> : <Upload size={14}/>}
-                            {importing ? 'Importing...' : 'Import'}
-                            <input 
-                              type="file" 
-                              accept=".json" 
-                              style={{ display: 'none' }} 
-                              onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) {
-                                  if (confirm(`Import and merge data from "${file.name}" into Surbhi Telecom?`)) {
-                                    importDataJSON(file, 'merge');
+                        {/* 3. Import & Restore Backup */}
+                        <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Import Backup File (.json / .csv)</div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Restore old transactions, accounts & records from JSON or CSV file</div>
+                            </div>
+                            <label 
+                              className="btn" 
+                              style={{ background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer' }}
+                            >
+                              {importing ? <Loader className="animate-spin" size={14}/> : <Upload size={14}/>}
+                              {importing ? 'Importing...' : 'Upload Data'}
+                              <input 
+                                type="file" 
+                                accept=".json,.csv" 
+                                style={{ display: 'none' }} 
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    if (confirm(`Import and merge data from "${file.name}" into Finance Buddy?`)) {
+                                      importDataJSON(file, 'merge');
+                                    }
+                                    e.target.value = '';
                                   }
-                                  e.target.value = '';
-                                }
-                              }}
-                              disabled={importing}
-                            />
-                          </label>
+                                }}
+                                disabled={importing}
+                              />
+                            </label>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                            <button 
+                              onClick={downloadSampleTemplateJSON}
+                              style={{ background: 'transparent', border: 'none', color: 'var(--blue)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                            >
+                              📥 Download Sample Backup Format (.json)
+                            </button>
+                          </div>
                         </div>
 
                         {/* 4. CSV Exports Grid */}
