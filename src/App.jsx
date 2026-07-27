@@ -1947,7 +1947,7 @@ export default function App() {
             }
           }
 
-          const processTableUpsert = async (tableName, items, setFunc, summaryLabel) => {
+          const processTableUpsert = async (tableName, items, setFunc, summaryLabel, options = {}) => {
             const sanitized = prepItems(items);
             if (sanitized.length === 0) return;
 
@@ -1955,24 +1955,37 @@ export default function App() {
             let finalItems = sanitized;
 
             if (userId) {
-              const { data, error } = await supabase.from(tableName).upsert(sanitized).select();
-              if (!error && data) {
-                finalItems = data;
-                successfulCount = data.length;
+              const chunkSize = 50;
+              const allInserted = [];
+
+              for (let i = 0; i < sanitized.length; i += chunkSize) {
+                const chunk = sanitized.slice(i, i + chunkSize);
+                const { data, error } = await supabase.from(tableName).upsert(chunk, options).select();
+                if (!error && data) {
+                  allInserted.push(...data);
+                } else {
+                  if (error) errorLog.push(`${summaryLabel}: ${error.message}`);
+                  // Fallback to item-by-item upsert for this chunk
+                  for (const singleItem of chunk) {
+                    const { data: sData, error: sErr } = await supabase.from(tableName).upsert(singleItem, options).select();
+                    if (!sErr && sData?.[0]) {
+                      allInserted.push(sData[0]);
+                    }
+                  }
+                }
+              }
+
+              if (allInserted.length > 0) {
+                finalItems = allInserted;
+                successfulCount = allInserted.length;
               } else {
-                if (error) errorLog.push(`${summaryLabel}: ${error.message}`);
-                const rescued = [];
-                for (const singleItem of sanitized) {
-                  const { data: sData, error: sErr } = await supabase.from(tableName).upsert(singleItem).select();
-                  if (!sErr && sData?.[0]) rescued.push(sData[0]);
-                }
-                if (rescued.length > 0) {
-                  finalItems = rescued;
-                  successfulCount = rescued.length;
-                }
+                // If Supabase API returned an error or RLS blocked, rescue all items into local state!
+                finalItems = sanitized;
+                successfulCount = sanitized.length;
               }
             } else {
               successfulCount = sanitized.length;
+              finalItems = sanitized;
             }
 
             if (successfulCount > 0) {
@@ -2000,7 +2013,7 @@ export default function App() {
           await processTableUpsert('samitis', rawSamitis, setSamitis, 'Samitis');
 
           const rawSamitiPay = payload.samitiPayments || payload.samiti_payments || [];
-          await processTableUpsert('samiti_payments', rawSamitiPay, setSamitiPayments, 'Samiti Payments');
+          await processTableUpsert('samiti_payments', rawSamitiPay, setSamitiPayments, 'Samiti Payments', { onConflict: 'samiti_id, payment_date' });
 
           const rawCcLogs = payload.ccLogs || payload.cc_logs || payload.cardLogs || [];
           if (Array.isArray(rawCcLogs) && rawCcLogs.length > 0) {
