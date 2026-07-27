@@ -1903,11 +1903,79 @@ export default function App() {
     return { incomes, expenses, borrowers, creditCards };
   };
 
+  const clearAllUserData = async (showNotification = true) => {
+    try {
+      const userId = session?.user?.id;
+
+      if (userId) {
+        await Promise.allSettled([
+          supabase.from('incomes').delete().eq('user_id', userId),
+          supabase.from('expenses').delete().eq('user_id', userId),
+          supabase.from('banks').delete().eq('user_id', userId),
+          supabase.from('credit_cards').delete().eq('user_id', userId),
+          supabase.from('borrowers').delete().eq('user_id', userId),
+          supabase.from('samitis').delete().eq('user_id', userId),
+          supabase.from('samiti_payments').delete().eq('user_id', userId),
+          supabase.from('cc_logs').delete().eq('user_id', userId),
+          supabase.from('vault_logs').delete().eq('user_id', userId),
+          supabase.from('profiles').update({ cash: 0, vault_target: 0 }).eq('id', userId)
+        ]);
+      }
+
+      const storageKeys = [
+        'fb_backup_incomes',
+        'fb_backup_expenses',
+        'fb_backup_banks',
+        'fb_backup_cash',
+        'fb_backup_credit_cards',
+        'fb_backup_borrowers',
+        'fb_backup_samitis',
+        'fb_backup_samiti_payments',
+        'fb_cc_logs',
+        'personal_vault_logs',
+        'personal_vault_target',
+        'fb_bank_pins'
+      ];
+      storageKeys.forEach(k => localStorage.removeItem(k));
+
+      setIncomes([]);
+      setExpenses([]);
+      setBanks([]);
+      setCreditCards([]);
+      setBorrowers([]);
+      setSamitis([]);
+      setSamitiPayments([]);
+      setCcLogs([]);
+      setVaultLogs([]);
+      setCash(0);
+      setVaultTarget(0);
+
+      if (showNotification) {
+        setImportStatus({
+          type: 'success',
+          message: 'All old data, Supabase cloud records & local backups cleared successfully!'
+        });
+      }
+      return true;
+    } catch (err) {
+      if (showNotification) {
+        setImportStatus({
+          type: 'error',
+          message: 'Error clearing data: ' + err.message
+        });
+      }
+      return false;
+    }
+  };
+
   const importDataJSON = async (fileObj, mode = 'merge') => {
     if (!fileObj) return;
     setImporting(true);
     setImportStatus(null);
     try {
+      if (mode === 'replace') {
+        await clearAllUserData(false);
+      }
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
@@ -5199,18 +5267,42 @@ export default function App() {
                         </div>
 
                         {/* 3. Import & Restore Backup */}
-                        <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                              <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Import Backup File (.json / .csv)</div>
-                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Restore old transactions, accounts & records from JSON or CSV file</div>
-                            </div>
+                        <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Import Backup File (.json / .csv)</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Restore old transactions, accounts & records from JSON or CSV file</div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            {/* Option A: Wipe & Fresh Restore */}
                             <label 
                               className="btn" 
-                              style={{ background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer' }}
+                              style={{ background: 'var(--purple-bg, rgba(147, 51, 234, 0.1))', color: 'var(--purple, #9333ea)', border: '1px solid rgba(147, 51, 234, 0.3)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', flex: 1, justifyContent: 'center' }}
+                            >
+                              {importing ? <Loader className="animate-spin" size={14}/> : <Trash2 size={14}/>}
+                              {importing ? 'Wiping & Restoring...' : 'Wipe & Fresh Restore'}
+                              <input 
+                                type="file" 
+                                accept=".json,.csv" 
+                                style={{ display: 'none' }} 
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    importDataJSON(file, 'replace');
+                                    e.target.value = '';
+                                  }
+                                }}
+                                disabled={importing}
+                              />
+                            </label>
+
+                            {/* Option B: Merge Upload */}
+                            <label 
+                              className="btn" 
+                              style={{ background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '8px 14px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', flex: 1, justifyContent: 'center' }}
                             >
                               {importing ? <Loader className="animate-spin" size={14}/> : <Upload size={14}/>}
-                              {importing ? 'Importing...' : 'Upload Data'}
+                              {importing ? 'Importing...' : 'Merge Upload'}
                               <input 
                                 type="file" 
                                 accept=".json,.csv" 
@@ -5226,12 +5318,24 @@ export default function App() {
                               />
                             </label>
                           </div>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', pt: '4px', borderTop: '1px borderless var(--border)' }}>
                             <button 
                               onClick={downloadSampleTemplateJSON}
                               style={{ background: 'transparent', border: 'none', color: 'var(--blue)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
                             >
-                              📥 Download Sample Backup Format (.json)
+                              📥 Download Sample Format (.json)
+                            </button>
+
+                            <button 
+                              onClick={() => {
+                                if (confirm('Are you sure you want to PERMANENTLY DELETE ALL transactions, banks, cards, samitis & Supabase records?')) {
+                                  clearAllUserData(true);
+                                }
+                              }}
+                              style={{ background: 'transparent', border: 'none', color: 'var(--red)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                            >
+                              🗑️ Clear All Old Data & Supabase
                             </button>
                           </div>
                         </div>
