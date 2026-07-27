@@ -628,18 +628,30 @@ export default function App() {
     }
   }, [isAdmin, view, settingsTab]);
 
-  const [incomes,     setIncomes]     = useState([]);
-  const [expenses,    setExpenses]    = useState([]);
-  const [banks,       setBanks]       = useState([]);
-  const [cash,        setCash]        = useState(DEFAULT_CASH);
-  const [creditCards, setCreditCards] = useState([]);
+  const getLocalBackup = (key, fallback = []) => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const [incomes,     setIncomes]     = useState(() => getLocalBackup('fb_backup_incomes', []));
+  const [expenses,    setExpenses]    = useState(() => getLocalBackup('fb_backup_expenses', []));
+  const [banks,       setBanks]       = useState(() => getLocalBackup('fb_backup_banks', []));
+  const [cash,        setCash]        = useState(() => {
+    const saved = localStorage.getItem('fb_backup_cash');
+    return saved !== null ? Number(saved) : DEFAULT_CASH;
+  });
+  const [creditCards, setCreditCards] = useState(() => getLocalBackup('fb_backup_credit_cards', []));
   const [ccDetailsModal, setCcDetailsModal] = useState({ open: false, card: null });
   const [ccPayModal, setCcPayModal] = useState({ open: false, card: null });
   const [activeCcMenuId, setActiveCcMenuId] = useState(null);
   const [ccHistoryFilterType, setCcHistoryFilterType] = useState('all');
-  const [borrowers,   setBorrowers]   = useState([]);
-  const [samitis,     setSamitis]     = useState([]);
-  const [samitiPayments, setSamitiPayments] = useState([]);
+  const [borrowers,   setBorrowers]   = useState(() => getLocalBackup('fb_backup_borrowers', []));
+  const [samitis,     setSamitis]     = useState(() => getLocalBackup('fb_backup_samitis', []));
+  const [samitiPayments, setSamitiPayments] = useState(() => getLocalBackup('fb_backup_samiti_payments', []));
 
   // Web Apps & Shortcuts State
   const [webApps, setWebApps] = useState(() => {
@@ -815,23 +827,28 @@ export default function App() {
         // Incomes
         if (incData && incData.length > 0) {
           setIncomes(incData);
+          localStorage.setItem('fb_backup_incomes', JSON.stringify(incData));
         } else if (impersonatedUser && adminData.incomes.length > 0) {
           setIncomes(adminData.incomes.filter(i => i.user_id === targetUserId));
         } else {
-          setIncomes(incData || []);
+          setIncomes(getLocalBackup('fb_backup_incomes', []));
         }
 
         // Expenses
         if (expData && expData.length > 0) {
           setExpenses(expData);
+          localStorage.setItem('fb_backup_expenses', JSON.stringify(expData));
         } else if (impersonatedUser && adminData.expenses.length > 0) {
           setExpenses(adminData.expenses.filter(e => e.user_id === targetUserId));
         } else {
-          setExpenses(expData || []);
+          setExpenses(getLocalBackup('fb_backup_expenses', []));
         }
 
         // Banks
-        const rawBanks = (bankData && bankData.length > 0) ? bankData : (impersonatedUser ? adminData.banks.filter(b => b.user_id === targetUserId) : (bankData || []));
+        const rawBanks = (bankData && bankData.length > 0) ? bankData : (impersonatedUser ? adminData.banks.filter(b => b.user_id === targetUserId) : getLocalBackup('fb_backup_banks', []));
+        if (bankData && bankData.length > 0) {
+          localStorage.setItem('fb_backup_banks', JSON.stringify(bankData));
+        }
         const savedPins = JSON.parse(localStorage.getItem('fb_bank_pins') || '{}');
         const hydratedBanks = rawBanks.map(b => {
           const savedPin = savedPins[b.id];
@@ -847,31 +864,39 @@ export default function App() {
         // Credit Cards
         if (cardData && cardData.length > 0) {
           setCreditCards(cardData);
+          localStorage.setItem('fb_backup_credit_cards', JSON.stringify(cardData));
         } else if (impersonatedUser && adminData.creditCards.length > 0) {
           setCreditCards(adminData.creditCards.filter(c => c.user_id === targetUserId));
         } else {
-          setCreditCards(cardData || []);
+          setCreditCards(getLocalBackup('fb_backup_credit_cards', []));
         }
 
         // Borrowers
         if (borrowerData && borrowerData.length > 0) {
           setBorrowers(borrowerData);
+          localStorage.setItem('fb_backup_borrowers', JSON.stringify(borrowerData));
         } else if (impersonatedUser && adminData.borrowers.length > 0) {
           setBorrowers(adminData.borrowers.filter(b => b.user_id === targetUserId));
         } else {
-          setBorrowers(borrowerData || []);
+          setBorrowers(getLocalBackup('fb_backup_borrowers', []));
         }
 
         // Samitis
         if (samitiData && samitiData.length > 0) {
           setSamitis(samitiData);
+          localStorage.setItem('fb_backup_samitis', JSON.stringify(samitiData));
         } else if (impersonatedUser && adminData.samitis.length > 0) {
           setSamitis(adminData.samitis.filter(s => s.user_id === targetUserId));
         } else {
-          setSamitis(samitiData || []);
+          setSamitis(getLocalBackup('fb_backup_samitis', []));
         }
 
-        if (samitiPaymentsData) setSamitiPayments(samitiPaymentsData);
+        if (samitiPaymentsData && samitiPaymentsData.length > 0) {
+          setSamitiPayments(samitiPaymentsData);
+          localStorage.setItem('fb_backup_samiti_payments', JSON.stringify(samitiPaymentsData));
+        } else {
+          setSamitiPayments(getLocalBackup('fb_backup_samiti_payments', []));
+        }
 
         // CC Logs
         if (logData && logData.length > 0) {
@@ -1947,7 +1972,7 @@ export default function App() {
             }
           }
 
-          const processTableUpsert = async (tableName, items, setFunc, summaryLabel, options = {}) => {
+          const processTableUpsert = async (tableName, items, setFunc, summaryLabel, storageKey, options = {}) => {
             const sanitized = prepItems(items);
             if (sanitized.length === 0) return;
 
@@ -1979,7 +2004,6 @@ export default function App() {
                 finalItems = allInserted;
                 successfulCount = allInserted.length;
               } else {
-                // If Supabase API returned an error or RLS blocked, rescue all items into local state!
                 finalItems = sanitized;
                 successfulCount = sanitized.length;
               }
@@ -1989,31 +2013,37 @@ export default function App() {
             }
 
             if (successfulCount > 0) {
-              setFunc(prev => mode === 'replace' ? finalItems : [...finalItems, ...prev.filter(x => !finalItems.some(d => d.id === x.id))]);
+              setFunc(prev => {
+                const updated = mode === 'replace' ? finalItems : [...finalItems, ...prev.filter(x => !finalItems.some(d => d.id === x.id))];
+                if (storageKey) {
+                  localStorage.setItem(storageKey, JSON.stringify(updated));
+                }
+                return updated;
+              });
               summaryCounts.push(`${successfulCount} ${summaryLabel}`);
             }
           };
 
           const rawIncomes = payload.incomes || payload.income || payload.incomesList || payload.transactions?.incomes || [];
-          await processTableUpsert('incomes', rawIncomes, setIncomes, 'Incomes');
+          await processTableUpsert('incomes', rawIncomes, setIncomes, 'Incomes', 'fb_backup_incomes');
 
           const rawExpenses = payload.expenses || payload.expense || payload.expensesList || payload.transactions?.expenses || [];
-          await processTableUpsert('expenses', rawExpenses, setExpenses, 'Expenses');
+          await processTableUpsert('expenses', rawExpenses, setExpenses, 'Expenses', 'fb_backup_expenses');
 
           const rawBanks = payload.banks || payload.bank || payload.bankAccounts || [];
-          await processTableUpsert('banks', rawBanks, setBanks, 'Banks');
+          await processTableUpsert('banks', rawBanks, setBanks, 'Banks', 'fb_backup_banks');
 
           const rawCards = payload.creditCards || payload.credit_cards || payload.cards || payload.creditCard || [];
-          await processTableUpsert('credit_cards', rawCards, setCreditCards, 'Credit Cards');
+          await processTableUpsert('credit_cards', rawCards, setCreditCards, 'Credit Cards', 'fb_backup_credit_cards');
 
           const rawBorrowers = payload.borrowers || payload.borrower || payload.khata || [];
-          await processTableUpsert('borrowers', rawBorrowers, setBorrowers, 'Khata Borrowers');
+          await processTableUpsert('borrowers', rawBorrowers, setBorrowers, 'Khata Borrowers', 'fb_backup_borrowers');
 
           const rawSamitis = payload.samitis || payload.samiti || [];
-          await processTableUpsert('samitis', rawSamitis, setSamitis, 'Samitis');
+          await processTableUpsert('samitis', rawSamitis, setSamitis, 'Samitis', 'fb_backup_samitis');
 
           const rawSamitiPay = payload.samitiPayments || payload.samiti_payments || [];
-          await processTableUpsert('samiti_payments', rawSamitiPay, setSamitiPayments, 'Samiti Payments', { onConflict: 'samiti_id, payment_date' });
+          await processTableUpsert('samiti_payments', rawSamitiPay, setSamitiPayments, 'Samiti Payments', 'fb_backup_samiti_payments', { onConflict: 'samiti_id, payment_date' });
 
           const rawCcLogs = payload.ccLogs || payload.cc_logs || payload.cardLogs || [];
           if (Array.isArray(rawCcLogs) && rawCcLogs.length > 0) {
@@ -5188,9 +5218,7 @@ export default function App() {
                                 onChange={(e) => {
                                   const file = e.target.files[0];
                                   if (file) {
-                                    if (confirm(`Import and merge data from "${file.name}" into Finance Buddy?`)) {
-                                      importDataJSON(file, 'merge');
-                                    }
+                                    importDataJSON(file, 'merge');
                                     e.target.value = '';
                                   }
                                 }}
