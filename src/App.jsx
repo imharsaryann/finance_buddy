@@ -915,6 +915,9 @@ export default function App() {
         if (webAppData && webAppData.length > 0) {
           setWebApps(webAppData);
           localStorage.setItem('fb_web_apps', JSON.stringify(webAppData));
+        } else {
+          setWebApps([]);
+          localStorage.removeItem('fb_web_apps');
         }
 
       } catch (err) {
@@ -1918,9 +1921,11 @@ export default function App() {
           supabase.from('samiti_payments').delete().eq('user_id', userId),
           supabase.from('cc_logs').delete().eq('user_id', userId),
           supabase.from('vault_logs').delete().eq('user_id', userId),
-          supabase.from('web_apps').delete().eq('user_id', userId),
+          supabase.from('web_apps').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
           supabase.from('profiles').update({ cash: 0, vault_target: 0 }).eq('id', userId)
         ]);
+      } else {
+        await supabase.from('web_apps').delete().neq('id', '00000000-0000-0000-0000-000000000000').catch(() => {});
       }
 
       const storageKeys = [
