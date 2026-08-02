@@ -915,16 +915,18 @@ export default function App() {
   }, []);
 
   // Fetch data hook
+  // Fetch data hook
   useEffect(() => {
     if (!supabase || !session) {
-      setIncomes([]);
-      setExpenses([]);
-      setBanks([]);
-      setCash(DEFAULT_CASH);
-      setCreditCards([]);
-      setBorrowers([]);
-      setSamitis([]);
-      setSamitiPayments([]);
+      setIncomes(getLocalBackup('fb_backup_incomes', []));
+      setExpenses(getLocalBackup('fb_backup_expenses', []));
+      setBanks(getLocalBackup('fb_backup_banks', []));
+      const savedCash = localStorage.getItem('fb_backup_cash');
+      if (savedCash !== null) setCash(Number(savedCash));
+      setCreditCards(getLocalBackup('fb_backup_credit_cards', []));
+      setBorrowers(getLocalBackup('fb_backup_borrowers', []));
+      setSamitis(getLocalBackup('fb_backup_samitis', []));
+      setSamitiPayments(getLocalBackup('fb_backup_samiti_payments', []));
       return;
     }
 
@@ -960,7 +962,25 @@ export default function App() {
 
         // Profiles
         if (profileData) {
-          if (profileData.cash !== undefined && profileData.cash !== null) setCash(Number(profileData.cash));
+          const currentCashLS = localStorage.getItem('fb_backup_cash');
+          const localCashVal = currentCashLS !== null ? Number(currentCashLS) : null;
+
+          if (profileData.cash !== undefined && profileData.cash !== null) {
+            const cloudCash = Number(profileData.cash);
+            // If cloud cash is 0 but user has a non-zero local cash backup, sync local cash to cloud!
+            if (cloudCash === 0 && localCashVal !== null && localCashVal > 0) {
+              setCash(localCashVal);
+              if (session?.user?.id && supabase) {
+                supabase.from('profiles').upsert({ id: session.user.id, cash: localCashVal }).catch(() => {});
+              }
+            } else {
+              setCash(cloudCash);
+              localStorage.setItem('fb_backup_cash', cloudCash.toString());
+            }
+          } else if (localCashVal !== null) {
+            setCash(localCashVal);
+          }
+
           if (profileData.vault_target !== undefined && profileData.vault_target !== null) {
             setVaultTarget(Number(profileData.vault_target));
             localStorage.setItem('personal_vault_target', Number(profileData.vault_target));
@@ -968,14 +988,20 @@ export default function App() {
           if (profileData.full_name) {
             setSettingsName(profileData.full_name);
           }
-        } else if (!impersonatedUser) {
-          await supabase.from('profiles').upsert([{ 
-            id: session.user.id, 
-            cash: DEFAULT_CASH,
-            full_name: session?.user?.user_metadata?.full_name || '',
-            email: session?.user?.email || ''
-          }]);
-          setCash(DEFAULT_CASH);
+        } else if (!impersonatedUser && session?.user?.id) {
+          const currentCash = localStorage.getItem('fb_backup_cash');
+          const cashVal = currentCash !== null ? Number(currentCash) : DEFAULT_CASH;
+          try {
+            await supabase.from('profiles').upsert([{ 
+              id: session.user.id, 
+              cash: cashVal,
+              full_name: session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '',
+              email: session?.user?.email || ''
+            }]);
+          } catch (e) {
+            console.log('Profile upsert note:', e);
+          }
+          setCash(cashVal);
         }
 
         // Incomes
@@ -1365,14 +1391,21 @@ export default function App() {
 
   const updateCash = async (amount) => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('profiles')
-      .upsert({ id: session.user.id, cash: amount, updated_at: new Date().toISOString() })
-      .select();
-    if (error) {
-      alert('Error updating cash: ' + error.message);
-    } else {
-      setCash(amount);
+    const numAmt = isNaN(Number(amount)) ? 0 : Number(amount);
+    setCash(numAmt);
+    localStorage.setItem('fb_backup_cash', numAmt.toString());
+
+    if (session?.user?.id && supabase) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({ id: session.user.id, cash: numAmt, updated_at: new Date().toISOString() });
+        if (error) {
+          console.log('Error updating cash on Supabase:', error.message);
+        }
+      } catch (err) {
+        console.log('Cash update exception:', err);
+      }
     }
     setLoading(false);
   };
@@ -1550,7 +1583,7 @@ export default function App() {
     }
   };
 
-  const addCcLog = async (cardId, type, amount, note, date) => {
+  const addCcLog = async (cardId, type, amount, note, date, bankId = null) => {
     setLoading(true);
     const card = creditCards.find(c => c.id === cardId);
     if (!card) {
@@ -1565,15 +1598,24 @@ export default function App() {
       : Math.max(0, currentOutstanding - amount);
 
     // Update state
-    setCreditCards(prev => prev.map(c => c.id === cardId ? { ...c, outstanding: newOutstanding } : c));
+    const updatedCards = creditCards.map(c => c.id === cardId ? { ...c, outstanding: newOutstanding } : c);
+    setCreditCards(updatedCards);
+    localStorage.setItem('fb_backup_credit_cards', JSON.stringify(updatedCards));
     
     // Save to Supabase credit_cards
-    await supabase.from('credit_cards').update({ outstanding: newOutstanding }).eq('id', cardId);
+    if (session?.user?.id && supabase) {
+      try {
+        await supabase.from('credit_cards').update({ outstanding: newOutstanding }).eq('id', cardId);
+      } catch (err) {
+        console.log('Supabase card update note:', err);
+      }
+    }
 
     const newLog = {
       id: Date.now().toString(),
       card_id: cardId,
       card_name: cardName,
+      bank_id: bankId,
       type, // 'spend' or 'repay'
       amount,
       note: note || (type === 'spend' ? 'Card Purchase / Withdrawal' : 'Bill Repayment'),
@@ -1592,18 +1634,20 @@ export default function App() {
     }
 
     // Try Supabase cc_logs insert
-    try {
-      await supabase.from('cc_logs').insert([{
-        card_id: cardId,
-        card_name: cardName,
-        type,
-        amount,
-        note: newLog.note,
-        date: newLog.date,
-        user_id: session?.user?.id
-      }]);
-    } catch (err) {
-      console.log('Supabase cc_logs note:', err);
+    if (session?.user?.id && supabase) {
+      try {
+        await supabase.from('cc_logs').insert([{
+          card_id: cardId,
+          card_name: cardName,
+          type,
+          amount,
+          note: newLog.note,
+          date: newLog.date,
+          user_id: session.user.id
+        }]);
+      } catch (err) {
+        console.log('Supabase cc_logs note:', err);
+      }
     }
 
     setLoading(false);
@@ -1620,13 +1664,27 @@ export default function App() {
         if (targetLog.type === 'repay') {
           // If deleting an accidental repayment, restore the debt back to the card!
           restoredOutstanding = restoredOutstanding + targetLog.amount;
+
+          // If the payment was made via Cash, restore cash back to Cash on Hand!
+          if (targetLog.note && targetLog.note.toLowerCase().includes('cash')) {
+            updateCash(cash + targetLog.amount);
+          } else if (targetLog.bank_id) {
+            const b = banks.find(x => x.id === targetLog.bank_id);
+            if (b) {
+              saveBank(b.id, b.bankName, b.type, b.accountNumber, b.balance + targetLog.amount);
+            }
+          }
         } else if (targetLog.type === 'spend') {
           // If deleting a spend, reduce the debt back from the card!
           restoredOutstanding = Math.max(0, restoredOutstanding - targetLog.amount);
         }
 
-        setCreditCards(prev => prev.map(c => c.id === card.id ? { ...c, outstanding: restoredOutstanding } : c));
-        await supabase.from('credit_cards').update({ outstanding: restoredOutstanding }).eq('id', card.id);
+        const updatedCards = creditCards.map(c => c.id === card.id ? { ...c, outstanding: restoredOutstanding } : c);
+        setCreditCards(updatedCards);
+        localStorage.setItem('fb_backup_credit_cards', JSON.stringify(updatedCards));
+        if (session?.user?.id && supabase) {
+          await supabase.from('credit_cards').update({ outstanding: restoredOutstanding }).eq('id', card.id);
+        }
       }
     }
 
@@ -1637,10 +1695,12 @@ export default function App() {
     } catch (err) {
       console.log('LS delete error:', err);
     }
-    try {
-      await supabase.from('cc_logs').delete().eq('id', logId);
-    } catch (err) {
-      console.log('Supabase cc_logs delete note:', err);
+    if (session?.user?.id && supabase) {
+      try {
+        await supabase.from('cc_logs').delete().eq('id', logId);
+      } catch (err) {
+        console.log('Supabase cc_logs delete note:', err);
+      }
     }
     setLoading(false);
   };
@@ -4092,380 +4152,71 @@ export default function App() {
 
 
           {/* ══ CREDIT CARDS ══ */}
-          {view === 'credit-cards' && (() => {
-            const ccLimit = creditCards.reduce((s, c) => s + Number(c.limit || 0), 0);
-            const ccDebt = creditCards.reduce((s, c) => s + Number(c.outstanding || 0), 0);
-            const ccUtil = ccLimit > 0 ? Number(((ccDebt / ccLimit) * 100).toFixed(1)) : 0;
-
-            const bestCardAdvice = (() => {
-              if (!creditCards || creditCards.length === 0) return null;
-
-              const cardStats = creditCards.map(card => {
-                const cycle = getSmartCardBillingCycle(card);
-                const util = card.limit > 0 ? ((card.outstanding / card.limit) * 100) : 0;
-                return {
-                  card,
-                  cycle,
-                  util,
-                  daysFree: cycle.interestFreeDaysRemaining || 0
-                };
-              });
-
-              cardStats.sort((a, b) => {
-                if (b.daysFree !== a.daysFree) return b.daysFree - a.daysFree;
-                return a.util - b.util;
-              });
-
-              return cardStats[0];
-            })();
-
-            return (
-              <div className="fade-in-view">
-                {/* Section Header */}
-                <div className="page-header" style={{ marginBottom: '1.5rem' }}>
-                  <div className="page-header-left">
-                    <span className="eyebrow">Liabilities</span>
-                    <h1>Credit Cards</h1>
-                  </div>
-                  <div className="page-header-right">
-                    <button className="btn btn-primary" onClick={() => openModal('Add Credit Card', 'card')}>
-                      <Plus size={15}/> Add Card
-                    </button>
-                  </div>
-                </div>
-
-                {/* 1. CRED HERO DASHBOARD BANNER */}
-                <div className="cred-hero-banner">
-                  <div className="cred-hero-grid">
-                    <div>
-                      <div className="cred-hero-metric-lbl">Total Credit Limit</div>
-                      <div className="cred-hero-metric-val">{fmt(ccLimit)}</div>
-                    </div>
-                    <div>
-                      <div className="cred-hero-metric-lbl">Total Used</div>
-                      <div className="cred-hero-metric-val" style={{ color: ccDebt > 0 ? 'var(--red)' : 'var(--text-primary)' }}>
-                        {fmt(ccDebt)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="cred-hero-metric-lbl">Total Available</div>
-                      <div className="cred-hero-metric-val" style={{ color: 'var(--green)' }}>
-                        {fmt(ccLimit - ccDebt)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="cred-hero-metric-lbl">Overall Utilization</div>
-                      <div className="cred-hero-metric-val">
-                        {ccUtil}%
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Animated Progress Bar */}
-                  <div className="cred-hero-progress-track">
-                    <div 
-                      className="cred-hero-progress-fill" 
-                      style={{ width: `${Math.min(ccUtil, 100)}%` }} 
-                    />
-                  </div>
-                </div>
-
-                {/* 2. SMART SPEND ADVISOR (SINGLE CARD RECOMMENDATION) */}
-                {bestCardAdvice && (
-                  <div className="cred-advisor-card">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <div className="cred-bank-avatar" style={{ width: 44, height: 44, fontSize: '1.1rem' }}>
-                        {bestCardAdvice.card.bankName ? bestCardAdvice.card.bankName.charAt(0).toUpperCase() : '💳'}
-                      </div>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            🏆 BEST CARD TODAY
-                          </span>
-                          <span className="cred-advisor-pill">
-                            <Sparkles size={13} /> {bestCardAdvice.daysFree} Interest-Free Days Remaining
-                          </span>
-                        </div>
-                        <h4 style={{ margin: '4px 0 0 0', fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)' }}>
-                          {bestCardAdvice.card.bankName} ({bestCardAdvice.card.cardName})
-                        </h4>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                        Reason: Lowest utilization ({bestCardAdvice.util.toFixed(0)}%) & longest grace period
-                      </span>
-                      <button 
-                        className="cred-btn-spend" 
-                        style={{ padding: '8px 16px', fontSize: '0.8rem' }}
-                        onClick={() => setCcSpendModal({ open: true, card: bestCardAdvice.card })}
-                      >
-                        <Plus size={14}/> Use This Card
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. CREDIT CARDS GRID */}
-                {creditCards.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                    {creditCards.map(card => {
-                      const util = card.limit > 0 ? ((card.outstanding / card.limit) * 100).toFixed(0) : 0;
-                      const cycle = getSmartCardBillingCycle(card);
-                      const isMenuOpen = activeCcMenuId === card.id;
-
-                      let progressColor = "var(--green)";
-                      if (util >= 30 && util <= 50) progressColor = "var(--amber)";
-                      else if (util > 50) progressColor = "var(--red)";
-
-                      return (
-                        <div key={card.id} className="cred-card-item">
-                          {/* Card Header */}
-                          <div className="cred-card-header">
-                            <div className="cred-bank-badge">
-                              <div className="cred-bank-avatar">
-                                {card.bankName ? card.bankName.charAt(0).toUpperCase() : '💳'}
-                              </div>
-                              <div>
-                                <h3 className="cred-card-title">{card.bankName}</h3>
-                                <div className="cred-card-subtitle">{card.cardName} •••• {card.cardNumber.slice(-4)}</div>
-                              </div>
-                            </div>
-
-                            {/* 3-Dot Menu */}
-                            <div className="cred-more-wrapper">
-                              <button 
-                                className="cred-more-btn" 
-                                onClick={() => setActiveCcMenuId(isMenuOpen ? null : card.id)}
-                                title="More Actions"
-                              >
-                                <MoreVertical size={16}/>
-                              </button>
-                              {isMenuOpen && (
-                                <div className="cred-dropdown-menu">
-                                  <button 
-                                    className="cred-dropdown-item edit"
-                                    onClick={() => {
-                                      setActiveCcMenuId(null);
-                                      openModal('Edit Credit Card', 'card', card);
-                                    }}
-                                  >
-                                    <Edit3 size={14}/> Edit Card
-                                  </button>
-                                  <button 
-                                    className="cred-dropdown-item delete"
-                                    onClick={() => {
-                                      setActiveCcMenuId(null);
-                                      if (confirm(`Remove ${card.bankName} CC?`)) deleteCreditCard(card.id);
-                                    }}
-                                  >
-                                    <Trash2 size={14}/> Delete Card
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Metrics Grid */}
-                          <div className="cred-card-metrics">
-                            <div className="cred-metric-block">
-                              <span className="lbl">CREDIT LIMIT</span>
-                              <div className="val">{fmt(card.limit)}</div>
-                            </div>
-                            <div className="cred-metric-block">
-                              <span className="lbl" style={{ color: card.outstanding > 0 ? 'var(--red)' : 'var(--text-muted)' }}>USED AMOUNT</span>
-                              <div className="val" style={{ color: card.outstanding > 0 ? 'var(--red)' : 'var(--text-primary)' }}>{fmt(card.outstanding)}</div>
-                            </div>
-                            <div className="cred-metric-block" style={{ textAlign: 'right' }}>
-                              <span className="lbl" style={{ color: 'var(--green)' }}>AVAILABLE</span>
-                              <div className="val" style={{ color: 'var(--green)' }}>{fmt(card.limit - card.outstanding)}</div>
-                            </div>
-                          </div>
-
-                          {/* Utilization Progress Bar */}
-                          <div className="cred-card-util-wrap">
-                            <div className="cred-card-util-header">
-                              <span style={{ color: 'var(--text-muted)' }}>Credit Utilization</span>
-                              <span style={{ color: progressColor, fontWeight: 800 }}>{util}%</span>
-                            </div>
-                            <div className="cred-card-progress-track">
-                              <div className="cred-card-progress-fill" style={{ width: `${Math.min(util, 100)}%`, background: progressColor }} />
-                            </div>
-                          </div>
-
-                          {/* Dates Row */}
-                          <div className="cred-dates-row">
-                            <div className="cred-dates-item">
-                              <span className="lbl">Next Statement</span>
-                              <span className="val">{cycle.formattedNextStmtShort}</span>
-                            </div>
-                            <div className="cred-dates-item" style={{ textAlign: 'right' }}>
-                              <span className="lbl">Payment Due</span>
-                              <span className="val" style={{ color: card.outstanding > 0 ? 'var(--red)' : 'var(--text-primary)' }}>
-                                {cycle.formattedDueDateShort}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className="cred-actions-row">
-                            <button 
-                              className="cred-btn-spend"
-                              onClick={() => setCcSpendModal({ open: true, card })}
-                            >
-                              <Plus size={14}/> Add Spend
-                            </button>
-                            <button 
-                              className="cred-btn-pay"
-                              onClick={() => setCcPayModal({ open: true, card })}
-                            >
-                              <CreditCard size={14}/> Pay Bill
-                            </button>
-                            <button 
-                              className="cred-btn-details"
-                              onClick={() => setCcDetailsModal({ open: true, card })}
-                            >
-                              <Info size={14}/> View Details
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="empty-state">No credit cards added yet. Click "+ Add Card" to get started!</div>
-                )}
-
-                {/* 4. TRANSACTION HISTORY SECTION */}
-                <div className="panel" style={{ marginTop: '2.5rem', padding: '1.5rem', borderRadius: '22px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
-                      <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
-                        📜 Transaction History
-                      </h3>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                        Grouped log of all credit card purchases and bill repayments
-                      </span>
-                    </div>
-
-                    {/* Filter Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      {/* Filter Type Pills */}
-                      <div style={{ display: 'flex', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px', padding: '2px' }}>
-                        <button 
-                          onClick={() => setCcHistoryFilterType('all')}
-                          style={{ padding: '5px 12px', border: 'none', background: ccHistoryFilterType === 'all' ? 'var(--bg-card)' : 'none', color: ccHistoryFilterType === 'all' ? 'var(--text-primary)' : 'var(--text-muted)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
-                        >
-                          All
-                        </button>
-                        <button 
-                          onClick={() => setCcHistoryFilterType('spend')}
-                          style={{ padding: '5px 12px', border: 'none', background: ccHistoryFilterType === 'spend' ? 'var(--bg-card)' : 'none', color: ccHistoryFilterType === 'spend' ? 'var(--red)' : 'var(--text-muted)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
-                        >
-                          Spends
-                        </button>
-                        <button 
-                          onClick={() => setCcHistoryFilterType('repay')}
-                          style={{ padding: '5px 12px', border: 'none', background: ccHistoryFilterType === 'repay' ? 'var(--bg-card)' : 'none', color: ccHistoryFilterType === 'repay' ? 'var(--green)' : 'var(--text-muted)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
-                        >
-                          Payments
-                        </button>
-                      </div>
-
-                      {/* Filter Card Dropdown */}
-                      <select 
-                        value={ccFilterCardId} 
-                        onChange={e => setCcFilterCardId(e.target.value)}
-                        style={{ padding: '6px 12px', borderRadius: '10px', background: 'var(--bg-base)', border: '1px solid var(--border)', fontSize: '0.78rem', fontWeight: 700 }}
-                      >
-                        <option value="all">All Credit Cards ({creditCards.length})</option>
-                        {creditCards.map(c => (
-                          <option key={c.id} value={c.id}>{c.bankName} ({c.cardName})</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Grouped Logs */}
-                  {(() => {
-                    let filtered = ccFilterCardId === 'all' ? ccLogs : ccLogs.filter(l => l.card_id === ccFilterCardId);
-                    if (ccHistoryFilterType !== 'all') {
-                      filtered = filtered.filter(l => l.type === ccHistoryFilterType);
-                    }
-
-                    if (filtered.length === 0) {
-                      return <div className="empty-state" style={{ padding: '2rem' }}>No transaction history found for selected filter.</div>;
-                    }
-
-                    const groups = {};
-                    filtered.forEach(log => {
-                      const dateObj = new Date(log.date);
-                      const monthKey = dateObj.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
-                      if (!groups[monthKey]) groups[monthKey] = [];
-                      groups[monthKey].push(log);
-                    });
-
-                    return Object.keys(groups).map(monthTitle => (
-                      <div key={monthTitle}>
-                        <div className="cred-history-month-header">
-                          <span>📅 {monthTitle}</span>
-                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{groups[monthTitle].length} transactions</span>
-                        </div>
-
-                        {groups[monthTitle].map(log => (
-                          <div key={log.id} className="cred-history-card-row">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              <div style={{ 
-                                width: 38, 
-                                height: 38, 
-                                borderRadius: 12, 
-                                background: log.type === 'spend' ? 'var(--red-bg)' : 'var(--green-bg)',
-                                color: log.type === 'spend' ? 'var(--red)' : 'var(--green)',
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center', 
-                                fontSize: '1.1rem',
-                                fontWeight: 800
-                              }}>
-                                {log.type === 'spend' ? '💸' : '💳'}
-                              </div>
-                              <div>
-                                <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                                  {log.note || (log.type === 'spend' ? 'Credit Card Spend' : 'Bill Repayment')}
-                                </div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                                  💳 {log.card_name} • {new Date(log.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                              <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '0.95rem', fontWeight: 900, color: log.type === 'spend' ? 'var(--red)' : 'var(--green)' }}>
-                                  {log.type === 'spend' ? `-${fmt(log.amount)}` : `+${fmt(log.amount)}`}
-                                </div>
-                                <span style={{ fontSize: '0.65rem', fontWeight: 800, color: log.type === 'spend' ? 'var(--red)' : 'var(--green)', textTransform: 'uppercase' }}>
-                                  {log.type === 'spend' ? 'Spend' : 'Payment'}
-                                </span>
-                              </div>
-                              <button 
-                                onClick={() => { if (confirm('Delete this transaction log?')) deleteCcLog(log.id); }}
-                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-                                title="Delete log"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ));
-                  })()}
+          {view === 'credit-cards' && (
+            <div className="fade-in-view" style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+              {/* Section Header */}
+              <div className="page-header" style={{ marginBottom: '2rem' }}>
+                <div className="page-header-left">
+                  <span className="eyebrow">Liabilities</span>
+                  <h1>Credit Cards</h1>
                 </div>
               </div>
-            );
-          })()}
+
+              {/* Coming Soon Glass Hero Card */}
+              <div className="panel" style={{ 
+                padding: '4rem 2rem', 
+                textAlign: 'center', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                borderRadius: '24px', 
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.05) 50%, rgba(16, 185, 129, 0.04) 100%)', 
+                border: '1px solid var(--border)', 
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.04)',
+                margin: 'auto 0'
+              }}>
+                <div style={{ 
+                  width: '80px', 
+                  height: '80px', 
+                  borderRadius: '24px', 
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', 
+                  color: '#ffffff', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  boxShadow: '0 12px 28px rgba(99, 102, 241, 0.3)',
+                  marginBottom: '1.5rem'
+                }}>
+                  <CreditCard size={38} />
+                </div>
+
+                <div className="badge blue" style={{ fontSize: '0.78rem', fontWeight: 800, padding: '6px 14px', borderRadius: '20px', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '1rem' }}>
+                  🚀 Feature Under Construction
+                </div>
+
+                <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 10px 0', letterSpacing: '-0.5px' }}>
+                  Credit Cards Page Coming Soon!
+                </h2>
+
+                <p style={{ maxWidth: '520px', fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 2rem 0' }}>
+                  We are upgrading the Credit Card experience to bring you automated statement tracking, smart bill repayment reminders, and reward optimization.
+                </p>
+
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <span style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                    ✨ Smart Reminders
+                  </span>
+                  <span style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                    💳 Auto Utilization Alert
+                  </span>
+                  <span style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                    🎁 Reward Optimizer
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
 
 
@@ -7054,16 +6805,21 @@ export default function App() {
                 const source = f.source.value;
                 const date = f.date.value;
                 if (amt > 0) {
+                  let paymentNote = 'Paid CC Bill';
+                  let bankIdForLog = null;
                   if (source === 'cash') {
                     updateCash(Math.max(0, cash - amt));
+                    paymentNote = 'Paid CC Bill via Cash';
                   } else if (source.startsWith('bank_')) {
                     const bankId = source.replace('bank_', '');
+                    bankIdForLog = bankId;
                     const b = banks.find(x => x.id === bankId);
                     if (b) {
                       saveBank(b.id, b.bankName, b.type, b.accountNumber, Math.max(0, b.balance - amt));
+                      paymentNote = `Paid CC Bill via ${b.bankName}`;
                     }
                   }
-                  addCcLog(ccPayModal.card.id, 'repay', amt, `Paid CC Bill via ${source === 'cash' ? 'Cash' : 'Bank'}`, date);
+                  addCcLog(ccPayModal.card.id, 'repay', amt, paymentNote, date, bankIdForLog);
                   setCcPayModal({ open: false, card: null });
                 }
               }}>
