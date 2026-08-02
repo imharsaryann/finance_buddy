@@ -908,6 +908,18 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (_event === 'SIGNED_OUT' || !session) {
+        setIncomes([]);
+        setExpenses([]);
+        setBanks([]);
+        setCash(0);
+        setCreditCards([]);
+        setBorrowers([]);
+        setSamitis([]);
+        setSamitiPayments([]);
+        setCcLogs([]);
+        setVaultLogs([]);
+      }
       setLoading(false);
     });
 
@@ -915,18 +927,17 @@ export default function App() {
   }, []);
 
   // Fetch data hook
-  // Fetch data hook
   useEffect(() => {
     if (!supabase || !session) {
-      setIncomes(getLocalBackup('fb_backup_incomes', []));
-      setExpenses(getLocalBackup('fb_backup_expenses', []));
-      setBanks(getLocalBackup('fb_backup_banks', []));
-      const savedCash = localStorage.getItem('fb_backup_cash');
+      setIncomes(getLocalBackup('fb_backup_incomes_guest', []));
+      setExpenses(getLocalBackup('fb_backup_expenses_guest', []));
+      setBanks(getLocalBackup('fb_backup_banks_guest', []));
+      const savedCash = localStorage.getItem('fb_backup_cash_guest');
       if (savedCash !== null) setCash(Number(savedCash));
-      setCreditCards(getLocalBackup('fb_backup_credit_cards', []));
-      setBorrowers(getLocalBackup('fb_backup_borrowers', []));
-      setSamitis(getLocalBackup('fb_backup_samitis', []));
-      setSamitiPayments(getLocalBackup('fb_backup_samiti_payments', []));
+      setCreditCards(getLocalBackup('fb_backup_credit_cards_guest', []));
+      setBorrowers(getLocalBackup('fb_backup_borrowers_guest', []));
+      setSamitis(getLocalBackup('fb_backup_samitis_guest', []));
+      setSamitiPayments(getLocalBackup('fb_backup_samiti_payments_guest', []));
       return;
     }
 
@@ -962,12 +973,11 @@ export default function App() {
 
         // Profiles
         if (profileData) {
-          const currentCashLS = localStorage.getItem('fb_backup_cash');
+          const currentCashLS = localStorage.getItem(`fb_backup_cash_${targetUserId}`);
           const localCashVal = currentCashLS !== null ? Number(currentCashLS) : null;
 
           if (profileData.cash !== undefined && profileData.cash !== null) {
             const cloudCash = Number(profileData.cash);
-            // If cloud cash is 0 but user has a non-zero local cash backup, sync local cash to cloud!
             if (cloudCash === 0 && localCashVal !== null && localCashVal > 0) {
               setCash(localCashVal);
               if (session?.user?.id && supabase) {
@@ -975,7 +985,7 @@ export default function App() {
               }
             } else {
               setCash(cloudCash);
-              localStorage.setItem('fb_backup_cash', cloudCash.toString());
+              localStorage.setItem(`fb_backup_cash_${targetUserId}`, cloudCash.toString());
             }
           } else if (localCashVal !== null) {
             setCash(localCashVal);
@@ -983,13 +993,13 @@ export default function App() {
 
           if (profileData.vault_target !== undefined && profileData.vault_target !== null) {
             setVaultTarget(Number(profileData.vault_target));
-            localStorage.setItem('personal_vault_target', Number(profileData.vault_target));
+            localStorage.setItem(`personal_vault_target_${targetUserId}`, Number(profileData.vault_target));
           }
           if (profileData.full_name) {
             setSettingsName(profileData.full_name);
           }
         } else if (!impersonatedUser && session?.user?.id) {
-          const currentCash = localStorage.getItem('fb_backup_cash');
+          const currentCash = localStorage.getItem(`fb_backup_cash_${targetUserId}`);
           const cashVal = currentCash !== null ? Number(currentCash) : DEFAULT_CASH;
           try {
             await supabase.from('profiles').upsert([{ 
@@ -1004,30 +1014,30 @@ export default function App() {
           setCash(cashVal);
         }
 
-        // Incomes
-        if (incData && incData.length > 0) {
+        // Incomes (Strict User Isolation)
+        if (incData !== null) {
           setIncomes(incData);
-          localStorage.setItem('fb_backup_incomes', JSON.stringify(incData));
+          localStorage.setItem(`fb_backup_incomes_${targetUserId}`, JSON.stringify(incData));
         } else if (impersonatedUser && adminData.incomes.length > 0) {
           setIncomes(adminData.incomes.filter(i => i.user_id === targetUserId));
         } else {
-          setIncomes(getLocalBackup('fb_backup_incomes', []));
+          setIncomes(getLocalBackup(`fb_backup_incomes_${targetUserId}`, []));
         }
 
-        // Expenses
-        if (expData && expData.length > 0) {
+        // Expenses (Strict User Isolation)
+        if (expData !== null) {
           setExpenses(expData);
-          localStorage.setItem('fb_backup_expenses', JSON.stringify(expData));
+          localStorage.setItem(`fb_backup_expenses_${targetUserId}`, JSON.stringify(expData));
         } else if (impersonatedUser && adminData.expenses.length > 0) {
           setExpenses(adminData.expenses.filter(e => e.user_id === targetUserId));
         } else {
-          setExpenses(getLocalBackup('fb_backup_expenses', []));
+          setExpenses(getLocalBackup(`fb_backup_expenses_${targetUserId}`, []));
         }
 
-        // Banks
-        const rawBanks = (bankData && bankData.length > 0) ? bankData : (impersonatedUser ? adminData.banks.filter(b => b.user_id === targetUserId) : getLocalBackup('fb_backup_banks', []));
-        if (bankData && bankData.length > 0) {
-          localStorage.setItem('fb_backup_banks', JSON.stringify(bankData));
+        // Banks (Strict User Isolation)
+        const rawBanks = (bankData !== null) ? bankData : (impersonatedUser ? adminData.banks.filter(b => b.user_id === targetUserId) : getLocalBackup(`fb_backup_banks_${targetUserId}`, []));
+        if (bankData !== null) {
+          localStorage.setItem(`fb_backup_banks_${targetUserId}`, JSON.stringify(bankData));
         }
         const savedPins = JSON.parse(localStorage.getItem('fb_bank_pins') || '{}');
         const hydratedBanks = rawBanks.map(b => {
@@ -1041,41 +1051,41 @@ export default function App() {
         });
         setBanks(hydratedBanks);
 
-        // Credit Cards
-        if (cardData && cardData.length > 0) {
+        // Credit Cards (Strict User Isolation)
+        if (cardData !== null) {
           setCreditCards(cardData);
-          localStorage.setItem('fb_backup_credit_cards', JSON.stringify(cardData));
+          localStorage.setItem(`fb_backup_credit_cards_${targetUserId}`, JSON.stringify(cardData));
         } else if (impersonatedUser && adminData.creditCards.length > 0) {
           setCreditCards(adminData.creditCards.filter(c => c.user_id === targetUserId));
         } else {
-          setCreditCards(getLocalBackup('fb_backup_credit_cards', []));
+          setCreditCards(getLocalBackup(`fb_backup_credit_cards_${targetUserId}`, []));
         }
 
-        // Borrowers
-        if (borrowerData && borrowerData.length > 0) {
+        // Borrowers (Strict User Isolation)
+        if (borrowerData !== null) {
           setBorrowers(borrowerData);
-          localStorage.setItem('fb_backup_borrowers', JSON.stringify(borrowerData));
+          localStorage.setItem(`fb_backup_borrowers_${targetUserId}`, JSON.stringify(borrowerData));
         } else if (impersonatedUser && adminData.borrowers.length > 0) {
           setBorrowers(adminData.borrowers.filter(b => b.user_id === targetUserId));
         } else {
-          setBorrowers(getLocalBackup('fb_backup_borrowers', []));
+          setBorrowers(getLocalBackup(`fb_backup_borrowers_${targetUserId}`, []));
         }
 
-        // Samitis
-        if (samitiData && samitiData.length > 0) {
+        // Samitis (Strict User Isolation)
+        if (samitiData !== null) {
           setSamitis(samitiData);
-          localStorage.setItem('fb_backup_samitis', JSON.stringify(samitiData));
+          localStorage.setItem(`fb_backup_samitis_${targetUserId}`, JSON.stringify(samitiData));
         } else if (impersonatedUser && adminData.samitis.length > 0) {
           setSamitis(adminData.samitis.filter(s => s.user_id === targetUserId));
         } else {
-          setSamitis(getLocalBackup('fb_backup_samitis', []));
+          setSamitis(getLocalBackup(`fb_backup_samitis_${targetUserId}`, []));
         }
 
-        if (samitiPaymentsData && samitiPaymentsData.length > 0) {
+        if (samitiPaymentsData !== null) {
           setSamitiPayments(samitiPaymentsData);
-          localStorage.setItem('fb_backup_samiti_payments', JSON.stringify(samitiPaymentsData));
+          localStorage.setItem(`fb_backup_samiti_payments_${targetUserId}`, JSON.stringify(samitiPaymentsData));
         } else {
-          setSamitiPayments(getLocalBackup('fb_backup_samiti_payments', []));
+          setSamitiPayments(getLocalBackup(`fb_backup_samiti_payments_${targetUserId}`, []));
         }
 
         // CC Logs
@@ -1393,7 +1403,8 @@ export default function App() {
     setLoading(true);
     const numAmt = isNaN(Number(amount)) ? 0 : Number(amount);
     setCash(numAmt);
-    localStorage.setItem('fb_backup_cash', numAmt.toString());
+    const cacheKey = session?.user?.id ? `fb_backup_cash_${session.user.id}` : 'fb_backup_cash_guest';
+    localStorage.setItem(cacheKey, numAmt.toString());
 
     if (session?.user?.id && supabase) {
       try {
