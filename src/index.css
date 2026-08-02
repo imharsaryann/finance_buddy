@@ -192,7 +192,7 @@ input, select, textarea { font-family: var(--font); outline: none; }
 }
 
 .top-navbar {
-  width: 255px;
+  width: 215px;
   height: calc(100vh - 24px);
   margin: 12px 0 12px 12px;
   border-radius: 24px;
@@ -204,7 +204,7 @@ input, select, textarea { font-family: var(--font); outline: none; }
   flex-direction: column;
   align-items: stretch;
   justify-content: space-between;
-  padding: 1.25rem 0.85rem;
+  padding: 1rem 0.65rem;
   z-index: 100;
   box-shadow: 0 20px 50px rgba(62, 54, 46, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
   flex-shrink: 0;
@@ -212,8 +212,8 @@ input, select, textarea { font-family: var(--font); outline: none; }
 }
 
 .top-navbar.collapsed {
-  width: 78px;
-  padding: 1.25rem 0.5rem;
+  width: 66px;
+  padding: 1rem 0.4rem;
 }
 
 .top-navbar.collapsed .brand-title,
@@ -226,7 +226,7 @@ input, select, textarea { font-family: var(--font); outline: none; }
 
 .top-navbar.collapsed .nav-item {
   justify-content: center;
-  padding: 12px;
+  padding: 8px 4px;
 }
 
 .top-navbar.collapsed .quick-link-item {
@@ -283,7 +283,7 @@ input, select, textarea { font-family: var(--font); outline: none; }
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: 4px;
+  gap: 6px;
   background: transparent;
   padding: 0;
   border-radius: 0;
@@ -292,7 +292,7 @@ input, select, textarea { font-family: var(--font); outline: none; }
   -webkit-backdrop-filter: none;
   overflow-y: auto;
   flex: 1;
-  margin: 1rem 0;
+  margin: 0.75rem 0;
 }
 .nav-menu::-webkit-scrollbar {
   width: 4px;
@@ -303,15 +303,15 @@ input, select, textarea { font-family: var(--font); outline: none; }
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 6px 8px;
+  border-radius: 12px;
   color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 0.84rem;
   letter-spacing: 0.2px;
   text-transform: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
   background: transparent;
   border: 1px solid transparent;
@@ -325,6 +325,30 @@ input, select, textarea { font-family: var(--font); outline: none; }
   background: linear-gradient(135deg, #6B8E23 0%, #55721B 100%);
   color: #FFFFFF;
   box-shadow: 0 6px 18px rgba(107, 142, 35, 0.28);
+}
+
+.nav-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.nav-item:hover .nav-item-icon {
+  background: var(--bg-base);
+  color: var(--green);
+  border-color: rgba(107, 142, 35, 0.3);
+}
+.nav-item.active .nav-item-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .main-content {

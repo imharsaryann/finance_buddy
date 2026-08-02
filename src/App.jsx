@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Home, PieChart, TrendingUp, TrendingDown, IndianRupee,
   Users, CreditCard, Target, Calendar, Plus, Trash2,
-  Edit3, Eye, CalendarCheck, ArrowRightLeft, X, Wallet, Pin,
+  Edit3, Eye, EyeOff, CalendarCheck, ArrowRightLeft, X, Wallet, Pin,
   Building, CheckCircle, AlertTriangle, ChevronLeft, ChevronRight,
   BarChart2, ArrowUpRight, ArrowDownRight, Menu, Loader, User, Minus, Briefcase, Clock, Shield, Info, Mail, Lock,
   Download, Upload, FileText, Database, RefreshCw, Settings, MoreVertical, Sparkles, Globe, ExternalLink, Search, Star,
-  StickyNote, PinOff, Palette, Archive, Hash
+  StickyNote, PinOff, Palette, Archive, Hash, ShieldCheck, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -607,13 +607,129 @@ function NoteCard({ note, noteBg, NOTE_COLORS, noteColorPicker, setNoteColorPick
 // ─────────────────────────────────────────────
 //   APP
 // ─────────────────────────────────────────────
-export default function App() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [view, setView]         = useState(() => localStorage.getItem('lastView') || 'dashboard');
+const WaterDropletsCanvas = () => {
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    localStorage.setItem('lastView', view);
-  }, [view]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Create 45 slow floating glass water droplets
+    const dropletCount = 45;
+    const droplets = Array.from({ length: dropletCount }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height - height,
+      length: 18 + Math.random() * 35,
+      radius: 2 + Math.random() * 3.5,
+      speed: 0.5 + Math.random() * 1.2, // SLOW realistic velocity
+      opacity: 0.25 + Math.random() * 0.45
+    }));
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      droplets.forEach(drop => {
+        // Draw slow trickling water streak trail
+        const gradient = ctx.createLinearGradient(drop.x, drop.y - drop.length, drop.x, drop.y);
+        gradient.addColorStop(0, 'rgba(107, 142, 35, 0)');
+        gradient.addColorStop(0.7, `rgba(107, 142, 35, ${drop.opacity * 0.4})`);
+        gradient.addColorStop(1, `rgba(163, 230, 53, ${drop.opacity})`);
+
+        ctx.beginPath();
+        ctx.moveTo(drop.x, drop.y - drop.length);
+        ctx.lineTo(drop.x, drop.y);
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = drop.radius * 0.8;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // Draw realistic glass water droplet head
+        ctx.beginPath();
+        ctx.arc(drop.x, drop.y, drop.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(163, 230, 53, ${drop.opacity * 0.85})`;
+        ctx.shadowColor = 'rgba(107, 142, 35, 0.4)';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Glistening highlight dot on water droplet (Glass Reflection)
+        ctx.beginPath();
+        ctx.arc(drop.x - drop.radius * 0.3, drop.y - drop.radius * 0.3, drop.radius * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${drop.opacity + 0.3})`;
+        ctx.fill();
+
+        // Slow downward motion
+        drop.y += drop.speed;
+
+        // Reset droplet when it falls past screen
+        if (drop.y > height + 50) {
+          drop.y = -50 - Math.random() * 100;
+          drop.x = Math.random() * width;
+          drop.speed = 0.5 + Math.random() * 1.2;
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        opacity: 0.85,
+        zIndex: 0
+      }}
+    />
+  );
+};
+
+export default function App() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const validViews = ['web-apps', 'dashboard', 'incomes', 'expenses', 'banks', 'accounts', 'credit-cards', 'borrowers', 'samiti', 'notes', 'personal', 'settings'];
+  const normalizeView = (v) => {
+    if (!v) return 'dashboard';
+    if (v === 'links') return 'web-apps';
+    if (v === 'bank' || v === 'account') return 'banks';
+    if (v === 'card' || v === 'credit-card') return 'credit-cards';
+    if (v === 'khata' || v === 'udhar') return 'borrowers';
+    if (validViews.includes(v)) return v;
+    return 'dashboard';
+  };
+
+  const [view, setViewState] = useState(() => {
+    const saved = localStorage.getItem('lastView');
+    return normalizeView(saved);
+  });
+
+  const setView = (newView) => {
+    const norm = normalizeView(newView);
+    setViewState(norm);
+    localStorage.setItem('lastView', norm);
+  };
 
   const [month, setMonth]       = useState(new Date());
   const [cashCollapsed, setCashCollapsed] = useState(false);
@@ -625,7 +741,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
   // Settings State
@@ -1140,20 +1256,11 @@ export default function App() {
     setAuthError('');
     setLoading(true);
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email: authEmail,
-          password: authPassword,
-        });
-        if (error) throw error;
-        alert('Verification email sent or signed up successfully!');
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: authEmail,
-          password: authPassword,
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: authEmail,
+        password: authPassword,
+      });
+      if (error) throw error;
     } catch (err) {
       setAuthError(err.message);
     } finally {
@@ -1466,35 +1573,88 @@ export default function App() {
       if (!validUrl.startsWith('http://') && !validUrl.startsWith('https://')) {
         validUrl = 'https://' + validUrl;
       }
-      const domain = new URL(validUrl).hostname;
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+      const domain = new URL(validUrl).hostname.replace(/^www\./, '');
+      
+      // Known Brand Overrides
+      if (domain.includes('surbhi-telcom') || domain.includes('surbhi')) {
+        return '/logo-surbhi.svg';
+      }
+      
+      return `https://icon.horse/icon/${domain}`;
     } catch {
       return null;
     }
   };
 
-  const AppFavicon = ({ title, url, size = 22 }) => {
+  const AppFavicon = ({ title, url, customIcon, size = 26 }) => {
     const [imgError, setImgError] = useState(false);
+    
+    let domain = '';
+    try {
+      let validUrl = url || '';
+      if (!validUrl.startsWith('http://') && !validUrl.startsWith('https://')) validUrl = 'https://' + validUrl;
+      domain = new URL(validUrl).hostname.replace(/^www\./, '');
+    } catch {}
+
+    const titleLower = (title || '').toLowerCase();
+    const domainLower = domain.toLowerCase();
+
+    // Direct brand overrides
+    if (titleLower.includes('surbhi') || domainLower.includes('surbhi')) {
+      return (
+        <img
+          src="/logo-surbhi.svg"
+          alt={title}
+          style={{ width: size + 6, height: size + 6, objectFit: 'contain' }}
+        />
+      );
+    }
+
+    // Custom Icon or Emoji if specified
+    if (customIcon) {
+      if (customIcon.startsWith('http') || customIcon.startsWith('/')) {
+        return <img src={customIcon} alt={title} style={{ width: size + 4, height: size + 4, borderRadius: '8px', objectFit: 'contain' }} />;
+      }
+      return <span style={{ fontSize: `${size + 4}px` }}>{customIcon}</span>;
+    }
+
     const faviconUrl = getFaviconUrl(url);
 
+    // Color gradient mapping based on title
     const colors = [
-      'linear-gradient(135deg, #10b981, #059669)',
-      'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-      'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-      'linear-gradient(135deg, #f59e0b, #d97706)',
-      'linear-gradient(135deg, #ec4899, #be185d)',
-      'linear-gradient(135deg, #06b6d4, #0891b2)'
+      'linear-gradient(135deg, #10B981, #047857)', // Emerald Green
+      'linear-gradient(135deg, #3B82F6, #1D4ED8)', // Royal Blue
+      'linear-gradient(135deg, #8B5CF6, #6D28D9)', // Purple
+      'linear-gradient(135deg, #F59E0B, #B45309)', // Amber
+      'linear-gradient(135deg, #EC4899, #BE185D)', // Rose
+      'linear-gradient(135deg, #06B6D4, #0E7490)', // Cyan
+      'linear-gradient(135deg, #EF4444, #B91C1C)'  // Coral Red
     ];
+
     const charCode = (title || 'A').charCodeAt(0);
     const bgGradient = colors[charCode % colors.length];
-    const initial = (title || 'A').charAt(0).toUpperCase();
+
+    // Smart Initials (e.g., "B 2 B" -> "B2B", "CSC" -> "CSC", "VOTER CARD" -> "VC")
+    const words = (title || 'A').trim().split(/\s+/);
+    let initial = '';
+    if (words.length >= 2) {
+      initial = (words[0][0] + words[1][0]).toUpperCase();
+    } else {
+      initial = title ? title.slice(0, 3).toUpperCase() : 'APP';
+    }
 
     if (faviconUrl && !imgError) {
       return (
         <img
           src={faviconUrl}
           alt={title}
-          style={{ width: size, height: size, borderRadius: '6px', objectFit: 'contain' }}
+          style={{
+            width: size + 6,
+            height: size + 6,
+            borderRadius: '8px',
+            objectFit: 'contain',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+          }}
           onError={() => setImgError(true)}
         />
       );
@@ -1503,18 +1663,21 @@ export default function App() {
     return (
       <div
         style={{
-          width: size + 14,
-          height: size + 14,
+          width: size + 16,
+          height: size + 16,
           borderRadius: '12px',
           background: bgGradient,
           color: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: `${Math.round(size * 0.55)}px`,
+          fontSize: `${Math.max(10, Math.round(size * 0.44))}px`,
           fontWeight: 900,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          textTransform: 'uppercase'
+          letterSpacing: '0.5px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          textTransform: 'uppercase',
+          padding: '0 3px',
+          flexShrink: 0
         }}
       >
         {initial}
@@ -1603,10 +1766,23 @@ export default function App() {
     }
     const cardName = `${card.bankName} (${card.cardName || 'CC'})`;
 
-    const currentOutstanding = card.outstanding || 0;
+    const currentOutstanding = parseFloat(card.outstanding) || 0;
     const newOutstanding = type === 'spend' 
       ? currentOutstanding + amount 
       : Math.max(0, currentOutstanding - amount);
+
+    // If repay and bankId is specified, deduct amount from cash/bank
+    if (type === 'repay' && bankId) {
+      if (bankId === 'cash') {
+        updateCash(Math.max(0, cash - amount));
+      } else {
+        const targetBank = banks.find(b => b.id === bankId);
+        if (targetBank) {
+          const newBal = Math.max(0, (targetBank.balance || 0) - amount);
+          saveBank(targetBank.id, targetBank.bankName, targetBank.accountNumber, newBal, targetBank.type);
+        }
+      }
+    }
 
     // Update state
     const updatedCards = creditCards.map(c => c.id === cardId ? { ...c, outstanding: newOutstanding } : c);
@@ -2588,248 +2764,305 @@ export default function App() {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        background: 'var(--bg-base)',
-        fontFamily: 'var(--font)'
+        background: 'linear-gradient(135deg, #FAFBFD 0%, #F1F5F9 50%, #E2E8F0 100%)',
+        fontFamily: 'var(--font)',
+        padding: '2rem 1.5rem'
       }}>
-        {/* Dynamic Theme Background Orbs matching Surbhi Logo Colors */}
-        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-          <div style={{ position: 'absolute', top: '-15%', left: '-10%', width: '650px', height: '650px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(107, 142, 35, 0.25) 0%, rgba(107, 142, 35, 0) 70%)', filter: 'blur(80px)' }} />
-          <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(212, 163, 115, 0.22) 0%, rgba(212, 163, 115, 0) 70%)', filter: 'blur(90px)' }} />
-          <div style={{ position: 'absolute', top: '40%', right: '20%', width: '550px', height: '550px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(95, 133, 154, 0.18) 0%, rgba(95, 133, 154, 0) 70%)', filter: 'blur(75px)' }} />
+        {/* 💧 Slow Realistic Water Droplets Canvas Effect */}
+        <WaterDropletsCanvas />
+
+        {/* Ambient Soft Light Glow Orbs */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 1 }}>
+          <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '650px', height: '650px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(107, 142, 35, 0.18) 0%, rgba(107, 142, 35, 0) 70%)', filter: 'blur(90px)' }} />
+          <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(212, 163, 115, 0.2) 0%, rgba(212, 163, 115, 0) 70%)', filter: 'blur(100px)' }} />
         </div>
 
-        {/* Ambient Subtle Grid Pattern */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: 'radial-gradient(rgba(62, 54, 46, 0.06) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-          opacity: 0.6,
-          zIndex: 1
-        }} />
-
-        {/* Centered Luxury Glass Login Card */}
+        {/* 🪞 UNIFIED GLASSMORPHIC MIRROR CONTAINER */}
         <div style={{
           position: 'relative',
           zIndex: 2,
           width: '100%',
-          maxWidth: '430px',
-          margin: '1.5rem',
-          padding: '2.5rem 2.25rem',
-          borderRadius: '28px',
-          background: 'rgba(255, 255, 255, 0.88)',
-          backdropFilter: 'blur(32px)',
-          WebkitBackdropFilter: 'blur(32px)',
-          border: '1px solid rgba(107, 142, 35, 0.22)',
-          boxShadow: '0 24px 60px rgba(62, 54, 46, 0.12), 0 0 30px rgba(107, 142, 35, 0.08)',
+          maxWidth: '1100px',
+          borderRadius: '36px',
+          background: 'rgba(255, 255, 255, 0.72)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          border: '1px solid rgba(107, 142, 35, 0.25)',
+          boxShadow: '0 30px 80px rgba(62, 54, 46, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
+          flexDirection: 'row',
+          alignItems: 'stretch',
+          justifyContent: 'space-between',
+          overflow: 'hidden',
+          flexWrap: 'wrap'
         }}>
-          {/* Logo & Brand Title */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '1.75rem' }}>
-            <div style={{
-              width: '96px',
-              height: '96px',
-              borderRadius: '24px',
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(244, 241, 234, 0.85) 100%)',
-              border: '1px solid rgba(107, 142, 35, 0.25)',
-              boxShadow: '0 12px 28px rgba(62, 54, 46, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.8)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '12px',
-              marginBottom: '1rem'
-            }}>
+          {/* Glossy Top Mirror Reflection Highlight */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(107, 142, 35, 0.6) 30%, rgba(255, 255, 255, 0.95) 50%, rgba(107, 142, 35, 0.6) 70%, transparent 100%)'
+          }} />
+
+          {/* 👈 LEFT SIDE: Hero Branding & Stat Cards */}
+          <div style={{
+            flex: '1.2 1 450px',
+            padding: '3.5rem 3.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            borderRight: '1px solid rgba(107, 142, 35, 0.15)'
+          }}>
+            {/* Top Logo & Pill Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <img
                 src="/logo-surbhi.svg"
-                style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 10px rgba(107, 142, 35, 0.2))' }}
-                alt="Surbhi Telecom"
-              />
-            </div>
-
-            <h1 style={{
-              fontSize: '1.75rem',
-              fontWeight: 900,
-              letterSpacing: '-0.5px',
-              background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--green) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              margin: 0
-            }}>
-              Surbhi Telecom
-            </h1>
-            <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Smart Business & Wealth Management Portal
-            </p>
-          </div>
-
-          {/* Mode Switcher Tabs */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            background: 'var(--bg-hover)',
-            borderRadius: '16px',
-            padding: '4px',
-            width: '100%',
-            marginBottom: '1.5rem',
-            border: '1px solid var(--border)'
-          }}>
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(false); setAuthError(''); }}
-              style={{
-                padding: '10px',
-                borderRadius: '12px',
-                border: 'none',
-                background: !isSignUp ? 'var(--bg-card)' : 'transparent',
-                color: !isSignUp ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontWeight: 800,
-                fontSize: '0.88rem',
-                cursor: 'pointer',
-                boxShadow: !isSignUp ? 'var(--shadow-xs)' : 'none',
-                transition: 'all 0.2s var(--ease)'
-              }}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(true); setAuthError(''); }}
-              style={{
-                padding: '10px',
-                borderRadius: '12px',
-                border: 'none',
-                background: isSignUp ? 'var(--bg-card)' : 'transparent',
-                color: isSignUp ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontWeight: 800,
-                fontSize: '0.88rem',
-                cursor: 'pointer',
-                boxShadow: isSignUp ? 'var(--shadow-xs)' : 'none',
-                transition: 'all 0.2s var(--ease)'
-              }}
-            >
-              Create Account
-            </button>
-          </div>
-
-          {/* Auth Form */}
-          <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', width: '100%' }}>
-            <div style={{ position: 'relative', width: '100%' }}>
-              <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}>
-                <Mail size={18} />
-              </div>
-              <input
-                type="email"
-                placeholder="Email Address"
-                value={authEmail}
-                onChange={e => setAuthEmail(e.target.value)}
-                required
                 style={{
-                  width: '100%',
-                  height: '48px',
-                  paddingLeft: '44px',
-                  paddingRight: '16px',
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-strong)',
-                  color: 'var(--text-primary)',
-                  borderRadius: '14px',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  transition: 'all 0.2s ease'
+                  height: '100px',
+                  width: 'auto',
+                  maxWidth: '280px',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 8px 24px rgba(107, 142, 35, 0.25))'
                 }}
-                onFocus={e => {
-                  e.target.style.borderColor = 'var(--green)';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.15)';
-                }}
-                onBlur={e => {
-                  e.target.style.borderColor = 'var(--border-strong)';
-                  e.target.style.boxShadow = 'none';
-                }}
+                alt="Surbhi Telecom Logo"
               />
-            </div>
-
-            <div style={{ position: 'relative', width: '100%' }}>
-              <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}>
-                <Lock size={18} />
-              </div>
-              <input
-                type="password"
-                placeholder="Password (min 6 characters)"
-                value={authPassword}
-                onChange={e => setAuthPassword(e.target.value)}
-                required
-                minLength={6}
-                style={{
-                  width: '100%',
-                  height: '48px',
-                  paddingLeft: '44px',
-                  paddingRight: '16px',
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-strong)',
-                  color: 'var(--text-primary)',
-                  borderRadius: '14px',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  transition: 'all 0.2s ease'
-                }}
-                onFocus={e => {
-                  e.target.style.borderColor = 'var(--green)';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.15)';
-                }}
-                onBlur={e => {
-                  e.target.style.borderColor = 'var(--border-strong)';
-                  e.target.style.boxShadow = 'none';
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              style={{
-                width: '100%',
-                height: '48px',
-                fontSize: '0.95rem',
-                fontWeight: 800,
-                marginTop: '0.25rem',
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, var(--green) 0%, #55721B 100%)',
-                color: '#ffffff',
-                border: 'none',
-                boxShadow: '0 8px 20px rgba(107, 142, 35, 0.3)',
-                display: 'flex',
+              <div style={{
+                display: 'inline-flex',
                 alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {isSignUp ? 'Create New Account' : 'Sign In to Dashboard'}
-            </button>
-          </form>
+                gap: '6px',
+                background: 'var(--green-bg)',
+                border: '1px solid rgba(107, 142, 35, 0.28)',
+                padding: '7px 16px',
+                borderRadius: '24px',
+                fontSize: '0.76rem',
+                fontWeight: 800,
+                color: 'var(--green)',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+                boxShadow: 'var(--shadow-xs)'
+              }}>
+                <Sparkles size={14} /> SURBHI TELECOM
+              </div>
+            </div>
 
-          {/* Toggle Helper Link */}
-          <div style={{ marginTop: '1.25rem', fontSize: '0.84rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-            {isSignUp ? 'Already have an account? ' : 'New to Surbhi Telecom? '}
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }}
-              style={{ background: 'none', border: 'none', color: 'var(--green)', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-            >
-              {isSignUp ? 'Sign In here' : 'Create an Account'}
-            </button>
+            {/* Main Hero Section */}
+            <div style={{ margin: '2.5rem 0' }}>
+              <h1 style={{
+                fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
+                fontSize: '3.6rem',
+                fontWeight: 900,
+                lineHeight: 1.05,
+                letterSpacing: '-2px',
+                background: 'linear-gradient(135deg, #0F172A 0%, #3B5311 60%, #6B8E23 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                margin: '0 0 12px 0'
+              }}>
+                SURBHI TELECOM
+              </h1>
+
+              <h2 style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: '1.38rem',
+                fontWeight: 800,
+                color: '#334155',
+                margin: 0,
+                letterSpacing: '-0.4px'
+              }}>
+                Personal Wealth & Financial Intelligence
+              </h2>
+
+              <p style={{ fontSize: '0.94rem', fontWeight: 600, color: '#64748B', margin: '10px 0 0 0', lineHeight: 1.6, maxWidth: '460px' }}>
+                Real-time daily cashflow liquidity, multi-bank balance management, digital khata ledger, and borrower debt logs strictly isolated for the owner.
+              </p>
+            </div>
           </div>
 
-          {authError && (
-            <div style={{ width: '100%', color: 'var(--red)', marginTop: '1.25rem', padding: '10px 14px', background: 'var(--red-bg)', borderRadius: '12px', border: '1px solid rgba(192, 92, 92, 0.3)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.82rem', textAlign: 'center' }}>
-              <AlertTriangle size={15} /> {authError}
-            </div>
-          )}
+          {/* 👉 RIGHT SIDE: Embedded Clean Glass Login Box */}
+          <div style={{
+            flex: '1 1 380px',
+            maxWidth: '430px',
+            padding: '3.5rem 2.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            background: 'rgba(255, 255, 255, 0.45)'
+          }}>
+            {/* Bento Header */}
+            <div style={{ marginBottom: '1.75rem' }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'var(--green-bg)',
+                border: '1px solid rgba(107, 142, 35, 0.25)',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                color: 'var(--green)',
+                marginBottom: '10px'
+              }}>
+                <Lock size={12}/> Owner Sign In
+              </div>
 
+              <h2 style={{ fontSize: '1.65rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.5px' }}>
+                Welcome Back
+              </h2>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginTop: '4px' }}>
+                Enter your credentials to access your dashboard
+              </span>
+            </div>
+
+            {/* Login Form */}
+            <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
+              {/* Email Field */}
+              <div style={{ position: 'relative', width: '100%' }}>
+                <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--green)', display: 'flex' }}>
+                  <Mail size={18} />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Owner Email Address"
+                  value={authEmail}
+                  onChange={e => setAuthEmail(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    height: '50px',
+                    paddingLeft: '44px',
+                    paddingRight: '16px',
+                    background: '#FFFFFF',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                    borderRadius: '14px',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)'
+                  }}
+                  onFocus={e => {
+                    e.target.style.borderColor = 'var(--green)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.15)';
+                  }}
+                  onBlur={e => {
+                    e.target.style.borderColor = 'var(--border)';
+                    e.target.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.02)';
+                  }}
+                />
+              </div>
+
+              {/* Password Field with Eye Toggle */}
+              <div style={{ position: 'relative', width: '100%' }}>
+                <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--green)', display: 'flex' }}>
+                  <Lock size={18} />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Master Password"
+                  value={authPassword}
+                  onChange={e => setAuthPassword(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    height: '50px',
+                    paddingLeft: '44px',
+                    paddingRight: '44px',
+                    background: '#FFFFFF',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)',
+                    borderRadius: '14px',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)'
+                  }}
+                  onFocus={e => {
+                    e.target.style.borderColor = 'var(--green)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.15)';
+                  }}
+                  onBlur={e => {
+                    e.target.style.borderColor = 'var(--border)';
+                    e.target.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.02)';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  height: '50px',
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  marginTop: '0.4rem',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  boxShadow: '0 8px 24px rgba(107, 142, 35, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {loading ? (
+                  <>
+                    <Loader size={18} className="spin" /> Authenticating...
+                  </>
+                ) : (
+                  <>
+                    Sign In to Dashboard <ChevronRight size={18} />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {authError && (
+              <div style={{ width: '100%', color: 'var(--red)', marginTop: '1.25rem', padding: '11px 14px', background: 'var(--red-bg)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.3)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.82rem', textAlign: 'center' }}>
+                <AlertTriangle size={16} /> {authError}
+              </div>
+            )}
+
+            {/* Security Footer Stamp */}
+            <div style={{ marginTop: '1.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', width: '100%', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+              <Shield size={13} color="var(--green)" /> Private Single-User Portal • Supabase Secured
+            </div>
+          </div>
         </div>
+
       </div>
     );
   }
@@ -2964,17 +3197,67 @@ export default function App() {
       <nav className={`top-navbar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div style={{
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          padding: sidebarCollapsed ? '0' : '0.25rem 0.25rem 0.75rem 0.25rem',
-          borderBottom: sidebarCollapsed ? 'none' : '1px solid var(--border)',
-          marginBottom: '0.75rem',
+          justifyContent: sidebarCollapsed ? 'center' : 'space-between',
+          gap: '8px',
+          padding: sidebarCollapsed ? '4px 0 10px 0' : '4px 4px 10px 4px',
+          borderBottom: '1px solid var(--border)',
+          marginBottom: '0.5rem',
           position: 'relative',
           width: '100%'
         }}>
-          {/* Absolute Collapse Toggle Button (Top Right) */}
-          {!sidebarCollapsed && (
+          {/* Left Naked Logo + Brand Name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+            <img
+              src="/logo-surbhi.svg"
+              onClick={handleLogoSecretClick}
+              style={{
+                height: sidebarCollapsed ? '32px' : '36px',
+                width: 'auto',
+                maxWidth: '100%',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 4px 10px rgba(107, 142, 35, 0.25))',
+                cursor: 'pointer',
+                flexShrink: 0
+              }}
+              alt="Surbhi Telecom Logo"
+              title="Surbhi Telecom (5x Fast Clicks = Admin Access)"
+            />
+
+            {!sidebarCollapsed && (
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{
+                  fontSize: '0.92rem',
+                  fontWeight: 900,
+                  fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
+                  letterSpacing: '0.2px',
+                  background: 'linear-gradient(135deg, var(--text-primary) 0%, #6B8E23 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  lineHeight: 1.15,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  SURBHI TELECOM
+                </div>
+                <div style={{
+                  fontSize: '0.58rem',
+                  fontWeight: 800,
+                  color: 'var(--text-muted)',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase',
+                  marginTop: '1px',
+                  whiteSpace: 'nowrap'
+                }}>
+                  Wealth & Business
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Toggle Button */}
+          {!sidebarCollapsed ? (
             <button
               onClick={() => {
                 setSidebarCollapsed(true);
@@ -2982,61 +3265,24 @@ export default function App() {
               }}
               title="Collapse Sidebar"
               style={{
-                position: 'absolute',
-                top: '0px',
-                right: '0px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '26px',
-                height: '26px',
-                borderRadius: '8px',
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-secondary)',
+                width: '22px',
+                height: '22px',
+                borderRadius: '6px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                zIndex: 2
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'var(--bg-hover)';
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'var(--bg-surface)';
-                e.currentTarget.style.color = 'var(--text-secondary)';
+                flexShrink: 0,
+                padding: 0
               }}
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={16} />
             </button>
-          )}
-
-          {/* Centered Large Logo Glass Container (Secret Admin Click Trigger) */}
-          <div
-            onClick={handleLogoSecretClick}
-            style={{
-              width: sidebarCollapsed ? '44px' : '72px',
-              height: sidebarCollapsed ? '44px' : '72px',
-              borderRadius: sidebarCollapsed ? '14px' : '20px',
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 241, 234, 0.9) 100%)',
-              border: '1px solid rgba(107, 142, 35, 0.3)',
-              boxShadow: '0 8px 20px rgba(62, 54, 46, 0.09), inset 0 0 0 1px rgba(255, 255, 255, 0.95)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: sidebarCollapsed ? '5px' : '7px',
-              margin: '0 auto',
-              transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-              flexShrink: 0,
-              cursor: 'pointer'
-            }}
-            title="Surbhi Telecom (5x Fast Clicks = Admin Access)"
-          >
-            <img src="/logo-surbhi.svg" style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} alt="Surbhi Telecom" />
-          </div>
-
-          {/* Expand Toggle Button when Collapsed */}
-          {sidebarCollapsed && (
+          ) : (
             <button
               onClick={() => {
                 setSidebarCollapsed(false);
@@ -3047,55 +3293,19 @@ export default function App() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '26px',
-                height: '26px',
-                borderRadius: '8px',
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-secondary)',
+                width: '22px',
+                height: '22px',
+                borderRadius: '6px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                margin: '8px auto 0 auto'
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'var(--bg-hover)';
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'var(--bg-surface)';
-                e.currentTarget.style.color = 'var(--text-secondary)';
+                margin: '4px auto 0 auto'
               }}
             >
-              <ChevronRight size={15} />
+              <ChevronRight size={16} />
             </button>
-          )}
-
-          {/* Brand Name & Subtitle Below Logo */}
-          {!sidebarCollapsed && (
-            <div style={{ textAlign: 'center', width: '100%', marginTop: '8px' }}>
-              <div style={{
-                fontSize: '1.15rem',
-                fontWeight: 900,
-                fontFamily: "'Outfit', 'Inter', sans-serif",
-                letterSpacing: '0.8px',
-                background: 'linear-gradient(135deg, var(--text-primary) 0%, #4E6B18 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                lineHeight: 1.2
-              }}>
-                SURBHI TELECOM
-              </div>
-              <div style={{
-                fontSize: '0.65rem',
-                fontWeight: 800,
-                color: 'var(--text-muted)',
-                letterSpacing: '1.8px',
-                textTransform: 'uppercase',
-                marginTop: '4px'
-              }}>
-                Wealth & Business
-              </div>
-            </div>
           )}
         </div>
 
@@ -3107,7 +3317,7 @@ export default function App() {
               onClick={() => { setView(it.id); setMobileMenuOpen(false); }}
               title={it.label}
             >
-              <div style={{ flexShrink: 0, fontSize: '1.1rem', lineHeight: 1 }}>{it.icon}</div>
+              <div className="nav-item-icon">{it.icon}</div>
               {!sidebarCollapsed && <span className="nav-item-label">{it.label}</span>}
             </button>
           ))}
@@ -3672,94 +3882,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 8. Chart (Large Area) */}
-                <div className="panel db-chart" style={{ display: 'flex', flexDirection: 'column', padding: '1.25rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
-                    <TrendingUp size={16} style={{ color: 'var(--accent)' }}/>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>Cashflow Trend (Full Month)</h3>
-                  </div>
-                  <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-                    <Line data={lineData} options={{ ...chartOpts, maintainAspectRatio: false }} />
-                  </div>
-                </div>
-
-                {/* 8. Rectangular Bento Credit Card Dues Box */}
-                {(() => {
-                  const pendingCards = creditCards.filter(c => parseFloat(c.outstanding) > 0);
-                  const hasDues = pendingCards.length > 0;
-
-                  return (
-                    <div 
-                      className={`panel db-cc-dues ${hasDues ? 'bento-blink-card' : ''}`} 
-                      style={{ 
-                        padding: '1.25rem 1.5rem', 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        justify: 'space-between',
-                        gap: '1rem',
-                        borderLeft: hasDues ? '5px solid var(--red)' : '1px solid var(--border)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ background: hasDues ? 'var(--red-bg)' : 'var(--green-bg)', color: hasDues ? 'var(--red)' : 'var(--green)', padding: '6px', borderRadius: '50%', display: 'flex' }}>
-                            <AlertTriangle size={15} />
-                          </div>
-                          <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0 }}>Credit Card Dues</h3>
-                        </div>
-                        <span className={`badge ${hasDues ? 'red' : 'green'}`} style={{ fontSize: '0.7rem', padding: '3px 8px', fontWeight: 800 }}>
-                          {hasDues ? `${pendingCards.length} Pending` : '✓ All Clear'}
-                        </span>
-                      </div>
-
-                      {hasDues ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                          {pendingCards.map(c => {
-                            const smart = getSmartCardDates(c.statementDate, c.dueDate, month);
-                            return (
-                              <div key={c.id} style={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                alignItems: 'center', 
-                                padding: '10px 14px', 
-                                background: 'var(--bg-card)', 
-                                border: '1px solid rgba(239, 68, 68, 0.2)', 
-                                borderRadius: '8px',
-                                gap: '12px' 
-                              }}>
-                                <div style={{ minWidth: 0, flex: 1 }}>
-                                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block' }}>💳 {c.bankName} CC</span>
-                                  <span style={{ fontSize: '0.68rem', color: smart.statusBadgeColor, fontWeight: 700 }}>
-                                    Due: {smart.dueShort} ({smart.statusText})
-                                  </span>
-                                </div>
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <span style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--red)' }}>{fmt(c.outstanding)}</span>
-                                  <button 
-                                    className="btn btn-primary" 
-                                    style={{ height: '30px', padding: '0 12px', fontSize: '0.72rem', fontWeight: 800, borderRadius: '6px' }}
-                                    onClick={() => {
-                                      const a = prompt(`Repay ${c.bankName} CC (Outstanding: ${fmt(c.outstanding)}):`, c.outstanding);
-                                      if (a && parseFloat(a) > 0) payCreditCard(c.id, parseFloat(a));
-                                    }}
-                                  >
-                                    Pay
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="empty-state" style={{ padding: '15px 0', color: 'var(--green)', fontSize: '0.82rem', fontWeight: 700, textAlign: 'center' }}>
-                          ✓ All clear! No pending credit card dues for this month.
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-
                 {/* 9. Total Khata */}
                 <div className="panel db-lent-dues" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.05) 100%)', borderTop: '4px solid var(--amber)' }}>
                   <div>
@@ -3986,24 +4108,6 @@ export default function App() {
                       Total money lent to borrowers pending recovery.
                     </p>
                   </div>
-
-                  {/* Total Dues Card */}
-                  <div className="panel" style={{ padding: '1.75rem', background: ccDebt > 0 ? 'linear-gradient(135deg, var(--bg-card) 0%, rgba(239, 68, 68, 0.08) 100%)' : 'linear-gradient(135deg, var(--bg-card) 0%, rgba(16, 185, 129, 0.05) 100%)', borderTop: ccDebt > 0 ? '4px solid var(--red)' : '4px solid var(--green)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <span style={{ color: ccDebt > 0 ? 'var(--red)' : 'var(--green)', fontSize: '0.8rem', fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {ccDebt > 0 ? '⚠️ Total Dues' : '✓ Total Dues'}
-                      </span>
-                      <div style={{ background: ccDebt > 0 ? 'var(--red-bg)' : 'var(--green-bg)', padding: '10px', borderRadius: '50%', color: ccDebt > 0 ? 'var(--red)' : 'var(--green)' }}>
-                        <AlertTriangle size={20} />
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '2.5rem', fontWeight: 900, color: ccDebt > 0 ? 'var(--red)' : 'var(--green)', letterSpacing: '-1.2px', lineHeight: 1.1 }}>
-                      {fmt(ccDebt)}
-                    </span>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 10, fontWeight: 500 }}>
-                      {ccDebt > 0 ? `Credit Card Liabilities (${creditCards.filter(c => parseFloat(c.outstanding) > 0).length} card(s) pending)` : 'All credit card dues fully cleared!'}
-                    </p>
-                  </div>
                 </div>
 
                 {/* Visual Asset Distribution Ratio Bar */}
@@ -4162,72 +4266,393 @@ export default function App() {
           })()}
 
 
-          {/* ══ CREDIT CARDS ══ */}
-          {view === 'credit-cards' && (
-            <div className="fade-in-view" style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-              {/* Section Header */}
-              <div className="page-header" style={{ marginBottom: '2rem' }}>
-                <div className="page-header-left">
-                  <span className="eyebrow">Liabilities</span>
-                  <h1>Credit Cards</h1>
-                </div>
-              </div>
+          {/* ══ CREDIT CARDS DASHBOARD & SMART SUITE ══ */}
+          {view === 'credit-cards' && (() => {
+            const totalLimit = creditCards.reduce((sum, c) => sum + (parseFloat(c.limit) || 0), 0);
+            const totalDebt = creditCards.reduce((sum, c) => sum + (parseFloat(c.outstanding) || 0), 0);
+            const availableCredit = Math.max(0, totalLimit - totalDebt);
+            const utilizationPct = totalLimit > 0 ? Math.min(100, (totalDebt / totalLimit) * 100) : 0;
 
-              {/* Coming Soon Glass Hero Card */}
-              <div className="panel" style={{ 
-                padding: '4rem 2rem', 
-                textAlign: 'center', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                borderRadius: '24px', 
-                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.05) 50%, rgba(16, 185, 129, 0.04) 100%)', 
-                border: '1px solid var(--border)', 
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.04)',
-                margin: 'auto 0'
-              }}>
-                <div style={{ 
-                  width: '80px', 
-                  height: '80px', 
-                  borderRadius: '24px', 
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', 
-                  color: '#ffffff', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  boxShadow: '0 12px 28px rgba(99, 102, 241, 0.3)',
-                  marginBottom: '1.5rem'
+            return (
+              <div className="fade-in-view" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                {/* Page Header */}
+                <div className="page-header" style={{ marginBottom: '0.5rem' }}>
+                  <div className="page-header-left">
+                    <span className="eyebrow">FINANCIAL INTELLIGENCE & CREDIT SUITE</span>
+                    <h1>Credit Cards</h1>
+                  </div>
+                  <div className="page-header-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {/* Multilingual Advice Language Selector Switch */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                      <button
+                        onClick={() => setAdvisorLang('hinglish')}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          background: advisorLang === 'hinglish' ? 'var(--accent)' : 'transparent',
+                          color: advisorLang === 'hinglish' ? '#fff' : 'var(--text-muted)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        🇮🇳 Hinglish
+                      </button>
+                      <button
+                        onClick={() => setAdvisorLang('english')}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          background: advisorLang === 'english' ? 'var(--accent)' : 'transparent',
+                          color: advisorLang === 'english' ? '#fff' : 'var(--text-muted)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        🇬🇧 English
+                      </button>
+                      <button
+                        onClick={() => setAdvisorLang('hindi')}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          background: advisorLang === 'hindi' ? 'var(--accent)' : 'transparent',
+                          color: advisorLang === 'hindi' ? '#fff' : 'var(--text-muted)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        🕉️ हिंदी
+                      </button>
+                    </div>
+
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setModal({ open: true, type: 'card' })}
+                    >
+                      <Plus size={15}/> Add Credit Card
+                    </button>
+                  </div>
+                </div>
+
+                {/* Top Metrics Bento Grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: '1.25rem'
                 }}>
-                  <CreditCard size={38} />
+                  {/* Card 1: Total Limit */}
+                  <div className="panel" style={{ padding: '1.25rem 1.5rem', borderRadius: 'var(--r-xl)', border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <CreditCard size={14} color="var(--accent)" /> Total Credit Limit
+                    </div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '8px', letterSpacing: '-0.5px' }}>
+                      ₹{totalLimit.toLocaleString('en-IN')}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '4px' }}>
+                      {creditCards.length} Active {creditCards.length === 1 ? 'Card' : 'Cards'}
+                    </div>
+                  </div>
+
+                  {/* Card 2: Total Outstanding Debt */}
+                  <div className="panel" style={{ padding: '1.25rem 1.5rem', borderRadius: 'var(--r-xl)', border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <TrendingUp size={14} color="var(--red)" /> Total Outstanding Debt
+                    </div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: totalDebt > 0 ? 'var(--red)' : 'var(--green)', marginTop: '8px', letterSpacing: '-0.5px' }}>
+                      ₹{totalDebt.toLocaleString('en-IN')}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '4px' }}>
+                      {creditCards.filter(c => parseFloat(c.outstanding) > 0).length} Cards With Due Balance
+                    </div>
+                  </div>
+
+                  {/* Card 3: Available Credit */}
+                  <div className="panel" style={{ padding: '1.25rem 1.5rem', borderRadius: 'var(--r-xl)', border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ShieldCheck size={14} color="var(--green)" /> Available Credit
+                    </div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--green)', marginTop: '8px', letterSpacing: '-0.5px' }}>
+                      ₹{availableCredit.toLocaleString('en-IN')}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '4px' }}>
+                      Ready Liquidity Buffer
+                    </div>
+                  </div>
+
+                  {/* Card 4: Utilization Gauge */}
+                  <div className="panel" style={{ padding: '1.25rem 1.5rem', borderRadius: 'var(--r-xl)', border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: utilizationPct > 30 ? 'var(--amber)' : 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Zap size={14} /> Credit Utilization
+                    </div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: utilizationPct > 50 ? 'var(--red)' : utilizationPct > 30 ? 'var(--amber)' : 'var(--green)', marginTop: '8px', letterSpacing: '-0.5px' }}>
+                      {utilizationPct.toFixed(1)}%
+                    </div>
+                    {/* Utilization Progress Bar */}
+                    <div style={{ width: '100%', height: '6px', borderRadius: '4px', background: 'var(--border)', marginTop: '8px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${utilizationPct}%`, background: utilizationPct > 50 ? 'var(--red)' : utilizationPct > 30 ? 'var(--amber)' : 'var(--green)', borderRadius: '4px', transition: 'width 0.3s ease' }} />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="badge blue" style={{ fontSize: '0.78rem', fontWeight: 800, padding: '6px 14px', borderRadius: '20px', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '1rem' }}>
-                  🚀 Feature Under Construction
-                </div>
+                {/* Credit Cards Grid */}
+                {creditCards.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+                    {creditCards.map(card => {
+                      const limit = parseFloat(card.limit) || 0;
+                      const debt = parseFloat(card.outstanding) || 0;
+                      const avail = Math.max(0, limit - debt);
+                      const cardUtil = limit > 0 ? Math.min(100, (debt / limit) * 100) : 0;
 
-                <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 10px 0', letterSpacing: '-0.5px' }}>
-                  Credit Cards Page Coming Soon!
-                </h2>
+                      // Calculate 0% Interest Spend Advice & Statement dates
+                      const stmtVal = card.statementDate || card.statement_date || card.statementDay || 1;
+                      const dueVal = card.dueDate || card.due_date || card.dueDay || 20;
+                      const smart = getSmartCardDates(stmtVal, dueVal, month);
 
-                <p style={{ maxWidth: '520px', fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 2rem 0' }}>
-                  We are upgrading the Credit Card experience to bring you automated statement tracking, smart bill repayment reminders, and reward optimization.
-                </p>
+                      // Determine Spend Advice Badge Color & Multilingual Text
+                      let adviceBadgeBg = 'rgba(16, 185, 129, 0.12)';
+                      let adviceBorder = 'rgba(16, 185, 129, 0.3)';
+                      let adviceColor = 'var(--green)';
+                      let adviceIcon = <Sparkles size={14} color="var(--green)" />;
 
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <span style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                    ✨ Smart Reminders
-                  </span>
-                  <span style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                    💳 Auto Utilization Alert
-                  </span>
-                  <span style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                    🎁 Reward Optimizer
-                  </span>
-                </div>
+                      let adviceTitle = '';
+                      let adviceSub = '';
+
+                      if (smart.todayGraceDays < 28) {
+                        adviceBadgeBg = 'rgba(239, 68, 68, 0.12)';
+                        adviceBorder = 'rgba(239, 68, 68, 0.3)';
+                        adviceColor = 'var(--red)';
+                        adviceIcon = <AlertTriangle size={14} color="var(--red)" />;
+
+                        if (advisorLang === 'hindi') {
+                          adviceTitle = `⚠️ आज बड़ा खर्चा न करें (केवल ${smart.todayGraceDays} दिन का फ्री क्रेडिट)`;
+                          adviceSub = `अगला स्टेटमेंट ${smart.stmtFull} को बनेगा। तब तक रुकें ताकि पूरे 50 दिन का 0% ब्याज लाभ मिले!`;
+                        } else if (advisorLang === 'hinglish') {
+                          adviceTitle = `⚠️ AAJ BADA KHARCHA MAT KAREIN (Sirf ${smart.todayGraceDays} Din Ka Free Credit)`;
+                          adviceSub = `Naya statement ${smart.stmtFull} ko banega. Uske baad spend karein taaki pure 50 din ka 0% interest mile!`;
+                        } else {
+                          adviceTitle = `AVOID BIG SPENDS TODAY (Only ${smart.todayGraceDays} Days Free Credit)`;
+                          adviceSub = `Next statement generates on ${smart.stmtFull}. Wait until then to get full 50 days free credit!`;
+                        }
+                      } else if (smart.todayGraceDays < 40) {
+                        adviceBadgeBg = 'rgba(245, 158, 11, 0.12)';
+                        adviceBorder = 'rgba(245, 158, 11, 0.3)';
+                        adviceColor = 'var(--amber)';
+                        adviceIcon = <Zap size={14} color="var(--amber)" />;
+
+                        if (advisorLang === 'hindi') {
+                          adviceTitle = `⚡ सामान्य क्रेडिट विंडो (${smart.todayGraceDays} दिन बचे हैं)`;
+                          adviceSub = `स्टेटमेंट ${smart.stmtFull} को बना था। बिल भुगतान तिथि ${smart.todayRepayFormatted} है।`;
+                        } else if (advisorLang === 'hinglish') {
+                          adviceTitle = `⚡ NORMAL CREDIT WINDOW (${smart.todayGraceDays} Din Baaki Hain)`;
+                          adviceSub = `Statement ${smart.stmtFull} ko bana tha. Bill payment date ${smart.todayRepayFormatted} hai.`;
+                        } else {
+                          adviceTitle = `MODERATE CREDIT CYCLE (${smart.todayGraceDays} Days Free Credit Remaining)`;
+                          adviceSub = `Billed on ${smart.stmtFull} & due on ${smart.todayRepayFormatted}.`;
+                        }
+                      } else {
+                        if (advisorLang === 'hindi') {
+                          adviceTitle = `🟢 आज खर्च करने का सही समय (${smart.todayGraceDays} दिन 0% ब्याज!)`;
+                          adviceSub = `आज खर्च करें और ${smart.todayRepayFormatted} को चुकाएं — बिना किसी ब्याज या पेनल्टी के!`;
+                        } else if (advisorLang === 'hinglish') {
+                          adviceTitle = `🟢 AAJ SPEND KARNE KA BEST TIME (${smart.todayGraceDays} Din 0% Interest!)`;
+                          adviceSub = `Aaj spend karein aur ${smart.todayRepayFormatted} ko repay karein — Bina kisi interest ya fine ke!`;
+                        } else {
+                          adviceTitle = `BEST TIME TO SPEND TODAY (${smart.todayGraceDays} Days 0% Interest)`;
+                          adviceSub = `Spend today and repay on ${smart.todayRepayFormatted} with 0% interest & 0 fine!`;
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={card.id}
+                          style={{
+                            borderRadius: '24px',
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border)',
+                            padding: '1.5rem',
+                            boxShadow: 'var(--shadow-sm)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            gap: '1.25rem',
+                            position: 'relative',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {/* Top Card Gradient Accent */}
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '4px',
+                            background: debt > 0 ? 'linear-gradient(90deg, #EF4444 0%, #F59E0B 100%)' : 'linear-gradient(90deg, #10B981 0%, #6B8E23 100%)'
+                          }} />
+
+                          {/* 🧠 SMART SPEND ADVISOR BADGE */}
+                          <div style={{
+                            background: adviceBadgeBg,
+                            border: `1px solid ${adviceBorder}`,
+                            borderRadius: '14px',
+                            padding: '10px 14px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px'
+                          }}>
+                            <div style={{ fontSize: '0.74rem', fontWeight: 900, color: adviceColor, display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.3px', textTransform: 'uppercase' }}>
+                              {adviceIcon} {adviceTitle}
+                            </div>
+                            <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', fontWeight: 600, lineHeight: 1.35 }}>
+                              {adviceSub}
+                            </div>
+                          </div>
+
+                          {/* Card Header Info */}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                            <div>
+                              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                {card.bankName}
+                              </div>
+                              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '2px' }}>
+                                {card.cardName || 'Credit Card'}
+                              </div>
+                              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, marginTop: '2px', fontFamily: 'monospace' }}>
+                                •••• •••• •••• {card.cardNumber || 'XXXX'}
+                              </div>
+                            </div>
+
+                            {/* Action Icons */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <button
+                                onClick={() => setModal({ open: true, type: 'card', item: card })}
+                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px' }}
+                                title="Edit Card"
+                              >
+                                <Edit3 size={15} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete credit card ${card.bankName} (${card.cardName})?`)) {
+                                    deleteCreditCard(card.id);
+                                  }
+                                }}
+                                style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', padding: '6px' }}
+                                title="Delete Card"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Debt vs Limit Info */}
+                          <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>Current Outstanding Due</span>
+                              <span style={{ fontSize: '1.18rem', fontWeight: 900, color: debt > 0 ? 'var(--red)' : 'var(--green)' }}>
+                                ₹{debt.toLocaleString('en-IN')}
+                              </span>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div style={{ width: '100%', height: '6px', borderRadius: '3px', background: 'var(--border)', overflow: 'hidden', margin: '8px 0' }}>
+                              <div style={{ height: '100%', width: `${cardUtil}%`, background: cardUtil > 50 ? 'var(--red)' : 'var(--green)', borderRadius: '3px', transition: 'width 0.3s ease' }} />
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, marginTop: '6px' }}>
+                              <span>Total Limit: ₹{limit.toLocaleString('en-IN')}</span>
+                              <span>Available: ₹{avail.toLocaleString('en-IN')}</span>
+                            </div>
+                          </div>
+
+                          {/* Due Date & Statement Cycle Info */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', fontWeight: 700 }}>
+                              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <Calendar size={13} /> Statement Date:
+                              </span>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Day {card.statementDate || '--'} of month</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', fontWeight: 700 }}>
+                              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <Clock size={13} /> Payment Due Date:
+                              </span>
+                              <span style={{ color: debt > 0 ? 'var(--red)' : 'var(--green)', fontWeight: 800 }}>Day {card.dueDate || '--'} of month ({smart.statusText})</span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={() => setCcSpendModal({ open: true, card })}
+                              style={{ padding: '9px 12px', fontSize: '0.82rem', fontWeight: 800, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                            >
+                              <TrendingDown size={14} /> Log Spend
+                            </button>
+                            <button
+                              className="btn btn-primary"
+                              onClick={() => setCcSpendModal({ open: true, card, isRepay: true })}
+                              style={{ padding: '9px 12px', fontSize: '0.82rem', fontWeight: 800, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                            >
+                              <CheckCircle size={14} /> Pay Bill
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Empty State */
+                  <div className="panel" style={{
+                    padding: '4rem 2rem',
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '24px',
+                    border: '1px solid var(--border)'
+                  }}>
+                    <div style={{
+                      width: '72px',
+                      height: '72px',
+                      borderRadius: '22px',
+                      background: 'var(--green-bg)',
+                      color: 'var(--green)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '1.25rem'
+                    }}>
+                      <CreditCard size={36} />
+                    </div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+                      No Credit Cards Added Yet
+                    </h2>
+                    <p style={{ maxWidth: '420px', fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
+                      Track your HDFC, ICICI, SBI, Axis, or Amex credit card limits, bill due dates, and 0% interest spend recommendations in real-time.
+                    </p>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setModal({ open: true, type: 'card' })}
+                      style={{ padding: '12px 24px', fontSize: '0.9rem', fontWeight: 800 }}
+                    >
+                      <Plus size={16} /> Add Your First Credit Card
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
 
 
@@ -6376,112 +6801,140 @@ export default function App() {
         </div>
       )}
 
-      {/* ═══ CC SPEND / WITHDRAW MODAL ═══ */}
-      {ccSpendModal.open && ccSpendModal.card && (
-        <div className="modal-backdrop" onClick={() => setCcSpendModal({ open: false, card: null })}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', padding: '1.75rem' }}>
-            {/* Ultra-Premium Glass Header */}
-            <div style={{ 
-              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(225, 29, 72, 0.04) 100%)', 
-              border: '1px solid rgba(239, 68, 68, 0.25)', 
-              padding: '1.1rem 1.25rem', 
-              borderRadius: '14px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justify: 'space-between',
-              marginBottom: '1.25rem' 
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ 
-                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
-                  color: '#ffffff', 
-                  padding: '8px', 
-                  borderRadius: '10px', 
-                  display: 'flex', 
-                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' 
-                }}>
-                  <TrendingUp size={18} />
+      {/* ═══ CC SPEND / REPAYMENT MODAL ═══ */}
+      {ccSpendModal.open && ccSpendModal.card && (() => {
+        const isRepay = !!ccSpendModal.isRepay;
+        const card = ccSpendModal.card;
+
+        return (
+          <div className="modal-backdrop" onClick={() => setCcSpendModal({ open: false, card: null })}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px', padding: '1.75rem' }}>
+              {/* Ultra-Premium Glass Header */}
+              <div style={{ 
+                background: isRepay ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.04) 100%)' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(225, 29, 72, 0.04) 100%)', 
+                border: isRepay ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)', 
+                padding: '1.1rem 1.25rem', 
+                borderRadius: '14px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justify: 'space-between',
+                marginBottom: '1.25rem' 
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ 
+                    background: isRepay ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
+                    color: '#ffffff', 
+                    padding: '8px', 
+                    borderRadius: '10px', 
+                    display: 'flex', 
+                    boxShadow: isRepay ? '0 4px 12px rgba(16, 185, 129, 0.3)' : '0 4px 12px rgba(239, 68, 68, 0.3)' 
+                  }}>
+                    {isRepay ? <CheckCircle size={18} /> : <TrendingDown size={18} />}
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.2px' }}>
+                      {isRepay ? '💳 Pay Credit Card Bill' : '💸 Record Spend / Purchase'}
+                    </h2>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isRepay ? 'var(--green)' : 'var(--red)', display: 'block', marginTop: '1px' }}>
+                      {card.bankName} ({card.cardName || 'CC'}) • Due: ₹{(parseFloat(card.outstanding) || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
                 </div>
+                <button 
+                  type="button"
+                  onClick={() => setCcSpendModal({ open: false, card: null })}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                >
+                  <X size={16}/>
+                </button>
+              </div>
+
+              <form onSubmit={e => {
+                e.preventDefault();
+                const amount = parseFloat(e.target.amount.value) || 0;
+                const note = e.target.note.value;
+                const date = e.target.date.value;
+                const bankId = isRepay && e.target.bankId ? e.target.bankId.value : null;
+
+                if (amount > 0 && date) {
+                  addCcLog(card.id, isRepay ? 'repay' : 'spend', amount, note, date, bankId);
+                  setCcSpendModal({ open: false, card: null });
+                }
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+
                 <div>
-                  <h2 style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.2px' }}>
-                    Record Spend / Withdrawal
-                  </h2>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--red)', display: 'block', marginTop: '1px' }}>
-                    💳 {ccSpendModal.card.bankName} ({ccSpendModal.card.cardName || 'Credit Card'})
-                  </span>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {isRepay ? 'Bill Payment Amount (₹)' : 'Amount Spent / Withdrawn (₹)'}
+                  </label>
+                  <input 
+                    name="amount" 
+                    type="number" 
+                    required 
+                    defaultValue={isRepay && card.outstanding > 0 ? card.outstanding : ''}
+                    placeholder="e.g. 5000" 
+                    min="1" 
+                    autoFocus
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 700, boxSizing: 'border-box' }}
+                  />
                 </div>
-              </div>
-              <button 
-                type="button"
-                onClick={() => setCcSpendModal({ open: false, card: null })}
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
-              >
-                <X size={16}/>
-              </button>
+
+                {isRepay && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Payment Source (Deduct From)
+                    </label>
+                    <select
+                      name="bankId"
+                      style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}
+                    >
+                      <option value="cash">💵 Cash on Hand (₹{cash.toLocaleString('en-IN')})</option>
+                      {banks.map(b => (
+                        <option key={b.id} value={b.id}>
+                          🏦 {b.bankName} (•••• {b.accountNumber.slice(-4)}) — ₹{b.balance.toLocaleString('en-IN')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Note / Remarks
+                  </label>
+                  <input 
+                    name="note" 
+                    type="text" 
+                    placeholder={isRepay ? "e.g. Full Statement Bill Payment" : "e.g. Fuel, Electronics, Shopping"}
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 700, boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Transaction Date
+                  </label>
+                  <input 
+                    name="date" 
+                    type="date" 
+                    required 
+                    defaultValue={new Date().toISOString().slice(0, 10)}
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 700, boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setCcSpendModal({ open: false, card: null })}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary" style={{ background: isRepay ? 'var(--green)' : 'var(--red)', color: '#fff', border: 'none', padding: '10px 18px', fontWeight: 800, borderRadius: '8px' }}>
+                    {isRepay ? 'Confirm Bill Payment' : 'Add Spend'}
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <form onSubmit={e => {
-              e.preventDefault();
-              const amount = parseFloat(e.target.amount.value) || 0;
-              const note = e.target.note.value;
-              const date = e.target.date.value;
-              if (amount > 0 && date) {
-                addCcLog(ccSpendModal.card.id, 'spend', amount, note, date);
-                setCcSpendModal({ open: false, card: null });
-              }
-            }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Amount Spent / Withdrawn (₹)
-                </label>
-                <input 
-                  name="amount" 
-                  type="number" 
-                  required 
-                  placeholder="e.g. 1000" 
-                  min="1" 
-                  autoFocus
-                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 700, boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Category / Purpose / Note
-                </label>
-                <input 
-                  name="note" 
-                  type="text" 
-                  placeholder="e.g. Fuel at BPCL, ATM Cash Withdrawal, Amazon"
-                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 700, boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Transaction Date
-                </label>
-                <input 
-                  name="date" 
-                  type="date" 
-                  required 
-                  defaultValue={new Date().toISOString().slice(0, 10)}
-                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 700, boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setCcSpendModal({ open: false, card: null })}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" style={{ background: 'var(--red)', color: '#fff', border: 'none', padding: '10px 18px', fontWeight: 800, borderRadius: '8px' }}>
-                  Add Spend / Withdrawal
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ═══ SPEND DATE SIMULATOR MODAL ═══ */}
       {spendSimulatorModal.open && spendSimulatorModal.card && (
@@ -6675,7 +7128,7 @@ export default function App() {
                   </div>
                   <div>
                     <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{card.bankName}</h3>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{card.cardName} •••• {card.cardNumber.slice(-4)}</span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{card.cardName} •••• {card.cardNumber ? String(card.cardNumber).slice(-4) : 'XXXX'}</span>
                   </div>
                 </div>
                 <button className="modal-close" onClick={() => setCcDetailsModal({ open: false, card: null })}><X size={16}/></button>
@@ -6745,7 +7198,7 @@ export default function App() {
                     </div>
                     <div className="detail-cell">
                       <span className="lbl">Card Number</span>
-                      <span className="val">•••• •••• •••• {card.cardNumber.slice(-4)}</span>
+                      <span className="val">•••• •••• •••• {card.cardNumber ? String(card.cardNumber).slice(-4) : 'XXXX'}</span>
                     </div>
                     <div className="detail-cell">
                       <span className="lbl">Reward Benefit</span>
@@ -6759,109 +7212,7 @@ export default function App() {
         );
       })()}
 
-      {/* ═══ ADD SPEND MODAL ═══ */}
-      {ccSpendModal.open && ccSpendModal.card && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setCcSpendModal({ open: false, card: null })}>
-          <div className="modal-box" style={{ borderRadius: '20px' }}>
-            <div className="modal-header">
-              <h3>💸 Add Credit Card Spend ({ccSpendModal.card.bankName})</h3>
-              <button className="modal-close" onClick={() => setCcSpendModal({ open: false, card: null })}><X size={14}/></button>
-            </div>
-            <div className="modal-body">
-              <form className="form-grid" onSubmit={e => {
-                e.preventDefault();
-                const f = e.target;
-                const amt = parseFloat(f.amount.value) || 0;
-                const note = f.note.value;
-                const date = f.date.value;
-                if (amt > 0) {
-                  addCcLog(ccSpendModal.card.id, 'spend', amt, note, date);
-                  setCcSpendModal({ open: false, card: null });
-                }
-              }}>
-                <div className="form-group full">
-                  <label>Amount (₹)</label>
-                  <input name="amount" type="number" required placeholder="0" min="1" autoFocus style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--red)' }}/>
-                </div>
-                <div className="form-group full">
-                  <label>Merchant / Category / Purpose</label>
-                  <input name="note" type="text" placeholder="e.g. Amazon Shopping, Fuel, Dining"/>
-                </div>
-                <div className="form-group full">
-                  <label>Date</label>
-                  <input name="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]}/>
-                </div>
-                <button type="submit" className="btn btn-primary" style={{ gridColumn: '1 / -1', background: 'var(--red)', borderColor: 'var(--red)', height: '44px', fontWeight: 800 }}>
-                  Record Spend
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ═══ PAY BILL MODAL ═══ */}
-      {ccPayModal.open && ccPayModal.card && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setCcPayModal({ open: false, card: null })}>
-          <div className="modal-box" style={{ borderRadius: '20px' }}>
-            <div className="modal-header">
-              <h3>💳 Pay Bill ({ccPayModal.card.bankName})</h3>
-              <button className="modal-close" onClick={() => setCcPayModal({ open: false, card: null })}><X size={14}/></button>
-            </div>
-            <div className="modal-body">
-              <form className="form-grid" onSubmit={e => {
-                e.preventDefault();
-                const f = e.target;
-                const amt = parseFloat(f.amount.value) || 0;
-                const source = f.source.value;
-                const date = f.date.value;
-                if (amt > 0) {
-                  let paymentNote = 'Paid CC Bill';
-                  let bankIdForLog = null;
-                  if (source === 'cash') {
-                    updateCash(Math.max(0, cash - amt));
-                    paymentNote = 'Paid CC Bill via Cash';
-                  } else if (source.startsWith('bank_')) {
-                    const bankId = source.replace('bank_', '');
-                    bankIdForLog = bankId;
-                    const b = banks.find(x => x.id === bankId);
-                    if (b) {
-                      saveBank(b.id, b.bankName, b.type, b.accountNumber, Math.max(0, b.balance - amt));
-                      paymentNote = `Paid CC Bill via ${b.bankName}`;
-                    }
-                  }
-                  addCcLog(ccPayModal.card.id, 'repay', amt, paymentNote, date, bankIdForLog);
-                  setCcPayModal({ open: false, card: null });
-                }
-              }}>
-                <div className="form-group full">
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                    Current Outstanding Debt: <strong style={{ color: 'var(--red)' }}>{fmt(ccPayModal.card.outstanding)}</strong>
-                  </div>
-                  <label>Payment Amount (₹)</label>
-                  <input name="amount" type="number" required placeholder="0" min="1" defaultValue={ccPayModal.card.outstanding || ''} autoFocus style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--green)' }}/>
-                </div>
-                <div className="form-group full">
-                  <label>Pay From Account</label>
-                  <select name="source" style={{ height: '44px', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-base)', fontSize: '0.85rem', fontWeight: 700 }}>
-                    <option value="cash">💵 Cash on Hand ({fmt(cash)})</option>
-                    {banks.map(b => (
-                      <option key={b.id} value={`bank_${b.id}`}>🏦 {b.bankName} - {b.accountNumber} ({fmt(b.balance)})</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group full">
-                  <label>Date</label>
-                  <input name="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]}/>
-                </div>
-                <button type="submit" className="btn btn-primary" style={{ gridColumn: '1 / -1', background: 'var(--green)', borderColor: 'var(--green)', height: '44px', fontWeight: 800 }}>
-                  Confirm Bill Payment
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ═══ ADD / EDIT WEB APP MODAL ═══ */}
       {appModal.open && (
