@@ -6,7 +6,7 @@ import {
   Building, CheckCircle, AlertTriangle, ChevronLeft, ChevronRight,
   BarChart2, ArrowUpRight, ArrowDownRight, Menu, Loader, User, Minus, Briefcase, Clock, Shield, Info, Mail, Lock,
   Download, Upload, FileText, Database, RefreshCw, Settings, MoreVertical, Sparkles, Globe, ExternalLink, Search, Star,
-  StickyNote, PinOff, Palette, Archive, Hash, ShieldCheck, Zap
+  StickyNote, PinOff, Palette, Archive, Hash, ShieldCheck, Zap, Moon, Sun
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -730,6 +730,17 @@ export default function App() {
     setViewState(norm);
     localStorage.setItem('lastView', norm);
   };
+
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('fb_theme');
+    if (saved) return saved;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('fb_theme', theme);
+  }, [theme]);
 
   const [month, setMonth]       = useState(new Date());
   const [cashCollapsed, setCashCollapsed] = useState(false);
@@ -3225,7 +3236,7 @@ export default function App() {
             />
 
             {!sidebarCollapsed && (
-              <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="brand-text" style={{ minWidth: 0, flex: 1 }}>
                 <div style={{
                   fontSize: '0.92rem',
                   fontWeight: 900,
@@ -3417,26 +3428,40 @@ export default function App() {
           </div>
         )}
 
-        {/* User Profile Glass Footer */}
-        <div
-          className="nav-profile"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: sidebarCollapsed ? '8px' : '10px 12px',
-            borderRadius: '16px',
-            background: 'rgba(247, 244, 238, 0.7)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(107, 142, 35, 0.18)',
-            justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            marginTop: 'auto'
-          }}
-          onClick={() => setView('settings')}
-          title="Account Settings"
-        >
+        {/* Bottom Actions (Theme Toggle & Profile) */}
+        <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', flexDirection: sidebarCollapsed ? 'column' : 'row', alignItems: 'center' }}>
+          <button
+            onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+            title="Toggle Theme"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: sidebarCollapsed ? '40px' : '44px', height: sidebarCollapsed ? '40px' : '44px', borderRadius: '16px',
+              background: 'var(--bg-surface)', border: '1px solid var(--border)',
+              color: 'var(--text-primary)', cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s ease'
+            }}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          
+          <div
+            className="nav-profile"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: sidebarCollapsed ? '8px' : '10px 12px',
+              borderRadius: '16px',
+              background: 'var(--bg-surface)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid var(--border)',
+              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              flex: 1
+            }}
+            onClick={() => setView('settings')}
+            title="Account Settings"
+          >
           <div className="profile-avatar" style={{
             width: '34px',
             height: '34px',
@@ -3463,6 +3488,7 @@ export default function App() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </nav>
 

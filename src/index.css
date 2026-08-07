@@ -57,6 +57,10 @@
   
   --shadow-glow: 0 0 25px rgba(107, 142, 35, 0.18);
 
+  /* Background details */
+  --grid-color: rgba(0,0,0,0.04);
+  --vignette-color: rgba(248, 250, 252, 0.8);
+
   /* Radii */
   --r-sm:  8px;
   --r-md:  16px;
@@ -67,6 +71,34 @@
   /* Font */
   --font: 'Outfit', 'Inter', -apple-system, sans-serif;
   --ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+[data-theme="dark"] {
+  --bg-base:       #121413;
+  --bg-secondary:  rgba(30, 34, 31, 0.85);
+  --bg-card:       rgba(30, 34, 31, 0.82);
+  --bg-surface:    rgba(22, 26, 23, 0.85);
+  --bg-hover:      rgba(40, 46, 42, 0.85);
+  --bg-sidebar:    rgba(22, 26, 23, 0.85);
+
+  --text-primary:   #EBEBEB;
+  --text-secondary: #A3A8A5;
+  --text-muted:     #7A807C;
+  --text-inverse:   #121413;
+
+  --border:        rgba(163, 230, 53, 0.15);
+  --border-strong: rgba(163, 230, 53, 0.3);
+
+  --shadow-xs: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 14px 36px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 22px 65px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 32px 90px rgba(0, 0, 0, 0.8);
+  
+  --shadow-glow: 0 0 25px rgba(163, 230, 53, 0.15);
+
+  --grid-color: rgba(255,255,255,0.03);
+  --vignette-color: rgba(0, 0, 0, 0.8);
 }
 
 /* ============ RESET ============ */
@@ -84,9 +116,9 @@ body {
   /* Layered Background: Noise, Grid, Vignette */
   background-image: 
     url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='0.3' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
-    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px),
-    radial-gradient(circle at center, transparent 40%, rgba(248, 250, 252, 0.8) 120%);
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+    radial-gradient(circle at center, transparent 40%, var(--vignette-color) 120%);
   background-size: 150px, 40px 40px, 40px 40px, 100% 100%;
   background-repeat: repeat, repeat, repeat, no-repeat;
   background-attachment: fixed;
@@ -390,6 +422,12 @@ input, select, textarea { font-family: var(--font); outline: none; }
     display: none !important;
   }
   .desktop-toggle-btn {
+    display: none !important;
+  }
+  .profile-details {
+    display: none !important;
+  }
+  .brand-text {
     display: none !important;
   }
   
