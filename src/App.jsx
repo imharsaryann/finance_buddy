@@ -5392,10 +5392,10 @@ export default function App() {
               {/* Glass Profile Banner Card */}
               <div 
                 style={{ 
-                  background: 'rgba(255, 255, 255, 0.85)', 
+                  background: 'var(--bg-card)', 
                   backdropFilter: 'blur(32px)',
                   WebkitBackdropFilter: 'blur(32px)',
-                  border: '1px solid rgba(107, 142, 35, 0.2)', 
+                  border: '1px solid var(--border)', 
                   borderRadius: '24px', 
                   padding: '1.75rem 2rem', 
                   marginBottom: '1.75rem', 
@@ -5944,12 +5944,12 @@ export default function App() {
 
                       {/* System Global Metric Cards Grid */}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
-                        <div style={{ background: 'rgba(255, 255, 255, 0.9)', padding: '1.15rem 1.25rem', borderRadius: '18px', border: '1px solid rgba(107, 142, 35, 0.2)', boxShadow: '0 8px 24px rgba(62, 54, 46, 0.04)' }}>
+                        <div style={{ background: 'rgba(255, 255, 255, 0.9)', padding: '1.15rem 1.25rem', borderRadius: '18px', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(62, 54, 46, 0.04)' }}>
                           <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👥 Total Users</span>
                           <div style={{ fontSize: '1.85rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: 4 }}>{adminData.profiles.length}</div>
                         </div>
 
-                        <div style={{ background: 'rgba(107, 142, 35, 0.08)', padding: '1.15rem 1.25rem', borderRadius: '18px', border: '1px solid rgba(107, 142, 35, 0.2)', boxShadow: '0 8px 24px rgba(107, 142, 35, 0.04)' }}>
+                        <div style={{ background: 'rgba(107, 142, 35, 0.08)', padding: '1.15rem 1.25rem', borderRadius: '18px', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(107, 142, 35, 0.04)' }}>
                           <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🟢 System Incomes</span>
                           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--green)', marginTop: 4 }}>{fmt(adminData.incomes.reduce((s, i) => s + Number(i.amount || 0), 0))}</div>
                         </div>
@@ -6009,7 +6009,7 @@ export default function App() {
                                 key={prof.id} 
                                 style={{ 
                                   background: 'rgba(255, 255, 255, 0.9)', 
-                                  border: '1px solid rgba(107, 142, 35, 0.2)', 
+                                  border: '1px solid var(--border)', 
                                   borderRadius: '20px', 
                                   padding: '1.25rem 1.5rem', 
                                   display: 'flex', 
