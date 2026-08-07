@@ -2865,6 +2865,58 @@ export default function App() {
               <p style={{ fontSize: '0.94rem', fontWeight: 600, color: 'var(--text-secondary)', margin: '10px 0 0 0', lineHeight: 1.6, maxWidth: '460px' }}>
                 Real-time daily cashflow liquidity, multi-bank balance management, digital khata ledger, and borrower debt logs strictly isolated for the owner.
               </p>
+
+              {/* 🌐 External Registration of Accounts & Details Portal Link */}
+              <a
+                href="https://surbhi-telecome.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Registration of accounts & details Portal"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  marginTop: '1.8rem',
+                  padding: '12px 20px',
+                  borderRadius: '16px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
+                  transition: 'all 0.25s ease',
+                  cursor: 'pointer',
+                  maxWidth: 'fit-content'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = 'var(--accent)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px var(--shadow-glow)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.04)';
+                }}
+              >
+                <img
+                  src="/logo-surbhi.svg"
+                  alt="Surbhi Telecom Icon"
+                  style={{
+                    height: '26px',
+                    width: 'auto',
+                    objectFit: 'contain'
+                  }}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Registration of accounts & details Portal <ExternalLink size={14} />
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    Open portal in new tab
+                  </span>
+                </div>
+              </a>
             </div>
           </div>
 
