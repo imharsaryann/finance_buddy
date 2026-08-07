@@ -3209,7 +3209,7 @@ export default function App() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               lineHeight: 1.1
-            }}>Surbhi Telecom</span>
+            }}>{session?.user?.user_metadata?.full_name || 'Finance Buddy'}</span>
           </div>
         </div>
 
