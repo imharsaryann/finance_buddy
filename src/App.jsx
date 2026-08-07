@@ -3184,21 +3184,33 @@ export default function App() {
       <div className="app-layout">
       <nav className="top-navbar">
         {/* Logo Section */}
-        <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingRight: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingRight: '1rem', gap: '12px' }}>
           <img
             src="/logo-surbhi.svg"
             onClick={handleLogoSecretClick}
             style={{
-              height: '56px',
+              height: '42px',
               width: 'auto',
               objectFit: 'contain',
               filter: 'drop-shadow(0 4px 12px var(--accent-soft))',
               cursor: 'pointer',
-              flexShrink: 0
+              flexShrink: 0,
+              borderRadius: '8px'
             }}
             alt="Surbhi Telecom Logo"
             title="Surbhi Telecom (5x Fast Clicks = Admin Access)"
           />
+          <div className="brand" style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ 
+              fontSize: '1.25rem', 
+              fontWeight: 900, 
+              letterSpacing: '-0.5px',
+              background: 'linear-gradient(135deg, var(--green) 0%, var(--amber) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              lineHeight: 1.1
+            }}>Surbhi Telecom</span>
+          </div>
         </div>
 
         {/* Navigation Items (Centered horizontally) */}
@@ -3407,9 +3419,37 @@ export default function App() {
                     <span className="nav-item-label" style={{ fontSize: '1rem', fontWeight: 700 }}>{it.label}</span>
                   </button>
                 ))}
+                
+                {/* Settings Link for Mobile */}
+                <button
+                  className={`nav-item ${view === 'settings' ? 'active' : ''}`}
+                  style={{ width: '100%', padding: '12px 14px', justifyContent: 'flex-start', borderRadius: '12px', marginTop: '8px', background: view === 'settings' ? 'var(--bg-base)' : 'transparent', border: view === 'settings' ? '1px solid var(--border)' : '1px solid transparent' }}
+                  onClick={() => { setView('settings'); setMobileMenuOpen(false); }}
+                >
+                  <div style={{ flexShrink: 0, fontSize: '1.2rem', lineHeight: 1, color: 'var(--text-secondary)' }}><Settings size={20} /></div>
+                  <span className="nav-item-label" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Settings</span>
+                </button>
               </div>
               
               <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
+                {/* Theme Toggle for Mobile */}
+                <button 
+                  className="btn"
+                  onClick={() => {
+                    const newTheme = theme === 'dark' ? 'light' : 'dark';
+                    setTheme(newTheme);
+                    localStorage.setItem('fb_theme', newTheme);
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                  }}
+                  style={{
+                    background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-primary)',
+                    width: '100%', padding: '12px', borderRadius: '12px', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '1rem'
+                  }}
+                >
+                  {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                  {theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                </button>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--grad-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1020', fontWeight: 'bold' }}>
                     {session?.user?.user_metadata?.full_name?.charAt(0) || 'U'}
@@ -5444,13 +5484,13 @@ export default function App() {
               {/* Glass 2-Column Split Card */}
               <div className="settings-container">
                 {/* Left Sidebar Menu */}
-                <div className="settings-sidebar">
+                <div className="settings-pill-nav">
                   <button
                     onClick={() => setSettingsTab('profile')}
                     className={`settings-tab-btn ${settingsTab === 'profile' ? 'active' : ''}`}
                   >
                     <User size={18} />
-                    <span>Edit Profile</span>
+                    <span>Profile</span>
                   </button>
 
                   <button
@@ -5458,88 +5498,73 @@ export default function App() {
                     className={`settings-tab-btn ${settingsTab === 'security' ? 'active' : ''}`}
                   >
                     <Shield size={18} />
-                    <span>Security & Password</span>
+                    <span>Security</span>
                   </button>
 
                   <button
                     onClick={() => setSettingsTab('data')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      borderRadius: '14px',
-                      border: 'none',
-                      background: settingsTab === 'data' ? 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)' : 'rgba(255, 255, 255, 0.4)',
-                      color: settingsTab === 'data' ? '#FFFFFF' : 'var(--text-secondary)',
-                      fontWeight: settingsTab === 'data' ? 800 : 600,
-                      fontSize: '0.9rem',
-                      cursor: 'pointer',
-                      boxShadow: settingsTab === 'data' ? '0 6px 18px rgba(107, 142, 35, 0.3)' : 'none',
-                      textAlign: 'left',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className={`settings-tab-btn ${settingsTab === 'data' ? 'active' : ''}`}
                   >
-                    <Database size={18} style={{ color: settingsTab === 'data' ? '#FFFFFF' : 'var(--purple)' }}/>
+                    <Database size={18} />
                     <span>Data & Backup</span>
                   </button>
 
                   <button
                     onClick={() => setSettingsTab('about')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      borderRadius: '14px',
-                      border: 'none',
-                      background: settingsTab === 'about' ? 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)' : 'rgba(255, 255, 255, 0.4)',
-                      color: settingsTab === 'about' ? '#FFFFFF' : 'var(--text-secondary)',
-                      fontWeight: settingsTab === 'about' ? 800 : 600,
-                      fontSize: '0.9rem',
-                      cursor: 'pointer',
-                      boxShadow: settingsTab === 'about' ? '0 6px 18px rgba(107, 142, 35, 0.3)' : 'none',
-                      textAlign: 'left',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className={`settings-tab-btn ${settingsTab === 'about' ? 'active' : ''}`}
                   >
-                    <Info size={18} style={{ color: settingsTab === 'about' ? '#FFFFFF' : 'var(--amber)' }}/>
+                    <Info size={18} />
                     <span>About</span>
                   </button>
 
                   {isAdmin && (
                     <button
                       onClick={() => setSettingsTab('admin')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '12px 16px',
-                        borderRadius: '14px',
-                        border: 'none',
-                        background: settingsTab === 'admin' ? 'linear-gradient(135deg, #D4A373 0%, #B8860B 100%)' : 'rgba(212, 163, 115, 0.15)',
-                        color: settingsTab === 'admin' ? '#FFFFFF' : 'var(--amber)',
-                        fontWeight: 800,
-                        fontSize: '0.9rem',
-                        cursor: 'pointer',
-                        boxShadow: settingsTab === 'admin' ? '0 6px 18px rgba(212, 163, 115, 0.35)' : 'none',
-                        textAlign: 'left',
-                        transition: 'all 0.2s ease',
-                        borderLeft: settingsTab === 'admin' ? 'none' : '4px solid var(--amber)'
-                      }}
+                      className={`settings-tab-btn ${settingsTab === 'admin' ? 'active' : ''}`}
+                      style={settingsTab === 'admin' ? { background: 'linear-gradient(135deg, #D4A373 0%, #B8860B 100%)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' } : { color: 'var(--amber)' }}
                     >
-                      <Shield size={18} style={{ color: settingsTab === 'admin' ? '#FFFFFF' : 'var(--amber)' }}/>
-                      <span>👑 Admin Panel</span>
+                      <ShieldCheck size={18} />
+                      <span>Admin</span>
                     </button>
                   )}
+                  
+                  {/* Theme Toggle (Right aligned in nav on desktop) */}
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '1rem', borderLeft: '1px solid var(--border)' }}>
+                    <button 
+                      className="desktop-toggle-btn"
+                      onClick={() => {
+                        const newTheme = theme === 'dark' ? 'light' : 'dark';
+                        setTheme(newTheme);
+                        localStorage.setItem('fb_theme', newTheme);
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                      }}
+                      style={{
+                        background: 'var(--bg-base)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-primary)',
+                        padding: '6px 12px',
+                        borderRadius: '99px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        boxShadow: 'var(--shadow-xs)'
+                      }}
+                    >
+                      {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                      {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Right Active Content Area */}
-                <div style={{ padding: '1.75rem 2rem' }}>
+                <div className="settings-content">
                   
                   {/* TAB 1: EDIT PROFILE */}
                   {settingsTab === 'profile' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className="settings-bento-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                       <div>
                         <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Edit Profile</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Update your personal profile information</p>
@@ -5652,7 +5677,7 @@ export default function App() {
                   {/* TAB 2: SECURITY & PASSWORD */}
 
                   {settingsTab === 'security' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className="settings-bento-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                       <div>
                         <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Security & Password</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Update your account password</p>
@@ -5716,7 +5741,7 @@ export default function App() {
 
                   {/* TAB 3: DATA & BACKUP */}
                   {settingsTab === 'data' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className="settings-bento-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                       <div>
                         <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Data & Cloud Storage</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Manage Supabase cloud sync, backup JSON exports, and file imports</p>
@@ -5867,7 +5892,7 @@ export default function App() {
 
                   {/* TAB 4: ABOUT */}
                   {settingsTab === 'about' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div className="settings-bento-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                       <div>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Surbhi Telecom</h3>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Smart Business & Wealth Management Dashboard</p>
@@ -5885,7 +5910,7 @@ export default function App() {
                   {/* TAB 5: ADMIN CONTROL CENTER */}
                   {/* TAB: ADMIN CONTROL CENTER */}
                   {settingsTab === 'admin' && isAdmin && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className="settings-bento-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                       
                       {/* Admin Header */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
