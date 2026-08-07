@@ -13,8 +13,8 @@ export default defineConfig({
         name: 'Surbhi Telecom',
         short_name: 'Surbhi',
         description: 'Wealth & Business Management',
-        theme_color: '#F7F4EE',
-        background_color: '#F7F4EE',
+        theme_color: '#F7FAFD',
+        background_color: '#F7FAFD',
         display: 'standalone',
         icons: [
           {

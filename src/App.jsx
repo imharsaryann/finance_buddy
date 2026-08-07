@@ -5,8 +5,9 @@ import {
   Edit3, Eye, EyeOff, CalendarCheck, ArrowRightLeft, X, Wallet, Pin,
   Building, CheckCircle, AlertTriangle, ChevronLeft, ChevronRight,
   BarChart2, ArrowUpRight, ArrowDownRight, Menu, Loader, User, Minus, Briefcase, Clock, Shield, Info, Mail, Lock,
-  Download, Upload, FileText, Database, RefreshCw, Settings, MoreVertical, Sparkles, Globe, ExternalLink, Search, Star,
-  StickyNote, PinOff, Palette, Archive, Hash, ShieldCheck, Zap, Moon, Sun
+  Download, Upload, FileText, Database, RefreshCw, Settings, MoreVertical, MoreHorizontal, Sparkles, Globe, ExternalLink, Search, Star,
+  StickyNote, PinOff, Palette, Archive, Hash, ShieldCheck, Zap, Moon, Sun,
+  Compass, BookOpen, Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -281,28 +282,25 @@ const DigitalClock = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const rawTimeString = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  const rawTimeString = time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const parts = rawTimeString.split(' ');
   const timeString = parts[0];
   const period = parts[1] || '';
 
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px', marginLeft: '6px' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px', marginLeft: '6px', background: 'var(--bg-hover)', padding: '2px 8px', borderRadius: '12px' }}>
       <span style={{
-        fontSize: '1.25rem',
-        fontWeight: 900,
-        fontFamily: "monospace, 'Outfit', 'Inter'",
-        background: 'linear-gradient(135deg, var(--purple) 0%, var(--blue) 100%)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        letterSpacing: '0.5px'
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        color: 'var(--text-secondary)',
+        fontVariantNumeric: 'tabular-nums'
       }}>
         {timeString}
       </span>
       <span style={{
-        fontSize: '0.7rem',
+        fontSize: '0.65rem',
         fontWeight: 800,
-        color: 'var(--purple)',
+        color: 'var(--text-muted)',
         textTransform: 'uppercase'
       }}>
         {period}
@@ -607,7 +605,7 @@ function NoteCard({ note, noteBg, NOTE_COLORS, noteColorPicker, setNoteColorPick
 // ─────────────────────────────────────────────
 //   APP
 // ─────────────────────────────────────────────
-const WaterDropletsCanvas = () => {
+const FloatingMotesCanvas = () => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -625,64 +623,43 @@ const WaterDropletsCanvas = () => {
     };
     window.addEventListener('resize', handleResize);
 
-    // Create 45 slow floating glass water droplets
-    const dropletCount = 45;
-    const droplets = Array.from({ length: dropletCount }, () => ({
+    const moteCount = 60;
+    const motes = Array.from({ length: moteCount }, () => ({
       x: Math.random() * width,
-      y: Math.random() * height - height,
-      length: 18 + Math.random() * 35,
-      radius: 2 + Math.random() * 3.5,
-      speed: 0.5 + Math.random() * 1.2, // SLOW realistic velocity
-      opacity: 0.25 + Math.random() * 0.45
+      y: Math.random() * height,
+      radius: Math.random() * 3 + 1,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      opacity: Math.random() * 0.5 + 0.1,
+      pulse: (Math.random() > 0.5 ? 1 : -1) * (0.005 + Math.random() * 0.01)
     }));
 
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
 
-      droplets.forEach(drop => {
-        // Draw slow trickling water streak trail
-        const gradient = ctx.createLinearGradient(drop.x, drop.y - drop.length, drop.x, drop.y);
-        gradient.addColorStop(0, 'rgba(107, 142, 35, 0)');
-        gradient.addColorStop(0.7, `rgba(107, 142, 35, ${drop.opacity * 0.4})`);
-        gradient.addColorStop(1, `rgba(163, 230, 53, ${drop.opacity})`);
-
+      motes.forEach(mote => {
         ctx.beginPath();
-        ctx.moveTo(drop.x, drop.y - drop.length);
-        ctx.lineTo(drop.x, drop.y);
-        ctx.strokeStyle = gradient;
-        ctx.lineWidth = drop.radius * 0.8;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-
-        // Draw realistic glass water droplet head
-        ctx.beginPath();
-        ctx.arc(drop.x, drop.y, drop.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(163, 230, 53, ${drop.opacity * 0.85})`;
-        ctx.shadowColor = 'rgba(107, 142, 35, 0.4)';
-        ctx.shadowBlur = 8;
+        ctx.arc(mote.x, mote.y, mote.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(111, 180, 232, ${mote.opacity})`;
+        ctx.shadowColor = 'rgba(111, 180, 232, 0.6)';
+        ctx.shadowBlur = 10;
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Glistening highlight dot on water droplet (Glass Reflection)
-        ctx.beginPath();
-        ctx.arc(drop.x - drop.radius * 0.3, drop.y - drop.radius * 0.3, drop.radius * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${drop.opacity + 0.3})`;
-        ctx.fill();
+        mote.x += mote.vx;
+        mote.y += mote.vy;
+        mote.opacity += mote.pulse;
 
-        // Slow downward motion
-        drop.y += drop.speed;
+        if (mote.opacity >= 0.8 || mote.opacity <= 0.1) mote.pulse *= -1;
 
-        // Reset droplet when it falls past screen
-        if (drop.y > height + 50) {
-          drop.y = -50 - Math.random() * 100;
-          drop.x = Math.random() * width;
-          drop.speed = 0.5 + Math.random() * 1.2;
-        }
+        if (mote.x < 0) mote.x = width;
+        if (mote.x > width) mote.x = 0;
+        if (mote.y < 0) mote.y = height;
+        if (mote.y > height) mote.y = 0;
       });
 
       animationFrameId = requestAnimationFrame(draw);
     };
-
     draw();
 
     return () => {
@@ -691,24 +668,27 @@ const WaterDropletsCanvas = () => {
     };
   }, []);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        opacity: 0.85,
-        zIndex: 0
-      }}
-    />
-  );
+  return <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1, pointerEvents: 'none' }} />;
 };
 
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navVisibleCount, setNavVisibleCount] = useState(10);
+  const navContainerRef = useRef(null);
+  
+  // Update nav menu visible items dynamically based on width
+  React.useLayoutEffect(() => {
+    if (!navContainerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      const { width } = entries[0].contentRect;
+      // Allow ~110px per nav item + 80px for the "More" button
+      const fitCount = Math.max(1, Math.floor((width - 80) / 110));
+      setNavVisibleCount(fitCount);
+    });
+    observer.observe(navContainerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const validViews = ['web-apps', 'dashboard', 'incomes', 'expenses', 'banks', 'accounts', 'credit-cards', 'borrowers', 'samiti', 'notes', 'personal', 'settings'];
   const normalizeView = (v) => {
     if (!v) return 'dashboard';
@@ -2620,8 +2600,8 @@ export default function App() {
           const d = new Date(month.getFullYear(), month.getMonth(), i + 1);
           return curInc.filter(x => new Date(x.date).toDateString() === d.toDateString()).reduce((s, x) => s + x.amount, 0);
         }),
-        borderColor: '#6B8E23',
-        backgroundColor: 'rgba(107, 142, 35, 0.15)',
+        borderColor: '#10B981',
+        backgroundColor: 'rgba(16, 185, 129, 0.15)',
         fill: true,
       },
       {
@@ -2630,8 +2610,8 @@ export default function App() {
           const d = new Date(month.getFullYear(), month.getMonth(), i + 1);
           return curExp.filter(x => new Date(x.date).toDateString() === d.toDateString()).reduce((s, x) => s + x.amount, 0);
         }),
-        borderColor: '#C05C5C',
-        backgroundColor: 'rgba(192, 92, 92, 0.15)',
+        borderColor: '#EF4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
         fill: true,
       }
     ]
@@ -2644,12 +2624,12 @@ export default function App() {
       {
         label: 'Income',
         data: monthLabels.map((_, i) => yearInc.filter(x => new Date(x.date).getMonth() === i).reduce((s, x) => s + x.amount, 0)),
-        backgroundColor: '#6B8E23', borderRadius: 4
+        backgroundColor: '#10B981', borderRadius: 4
       },
       {
         label: 'Expense',
         data: monthLabels.map((_, i) => yearExp.filter(x => new Date(x.date).getMonth() === i).reduce((s, x) => s + x.amount, 0)),
-        backgroundColor: '#C05C5C', borderRadius: 4
+        backgroundColor: '#EF4444', borderRadius: 4
       }
     ]
   };
@@ -2658,7 +2638,7 @@ export default function App() {
     labels: ['Banks & Cash', 'Khata'],
     datasets: [{
       data: [totalWealth, lentOut],
-      backgroundColor: ['#5F859A', '#6B8E23'],
+      backgroundColor: ['#3b82f6', '#10b981'],
       borderWidth: 0,
       hoverOffset: 4
     }]
@@ -2775,17 +2755,18 @@ export default function App() {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        background: 'linear-gradient(135deg, #FAFBFD 0%, #F1F5F9 50%, #E2E8F0 100%)',
+        background: 'var(--bg-base)',
         fontFamily: 'var(--font)',
         padding: '2rem 1.5rem'
       }}>
         {/* 💧 Slow Realistic Water Droplets Canvas Effect */}
-        <WaterDropletsCanvas />
+        {/* Fluid Motes Background Effect */}
+        <FloatingMotesCanvas />
 
         {/* Ambient Soft Light Glow Orbs */}
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 1 }}>
-          <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '650px', height: '650px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(107, 142, 35, 0.18) 0%, rgba(107, 142, 35, 0) 70%)', filter: 'blur(90px)' }} />
-          <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(212, 163, 115, 0.2) 0%, rgba(212, 163, 115, 0) 70%)', filter: 'blur(100px)' }} />
+          <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '650px', height: '650px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(46, 123, 214, 0.18) 0%, rgba(46, 123, 214, 0) 70%)', filter: 'blur(90px)' }} />
+          <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(111, 180, 232, 0.15) 0%, rgba(111, 180, 232, 0) 70%)', filter: 'blur(100px)' }} />
         </div>
 
         {/* 🪞 UNIFIED GLASSMORPHIC MIRROR CONTAINER */}
@@ -2795,10 +2776,10 @@ export default function App() {
           width: '100%',
           maxWidth: '1100px',
           borderRadius: '36px',
-          background: 'rgba(255, 255, 255, 0.72)',
+          background: 'var(--bg-card)',
           backdropFilter: 'blur(40px) saturate(180%)',
           WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(107, 142, 35, 0.25)',
+          border: '1px solid var(--border)',
           boxShadow: '0 30px 80px rgba(62, 54, 46, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
           display: 'flex',
           flexDirection: 'row',
@@ -2814,7 +2795,7 @@ export default function App() {
             left: 0,
             right: 0,
             height: '2px',
-            background: 'linear-gradient(90deg, transparent 0%, rgba(107, 142, 35, 0.6) 30%, rgba(255, 255, 255, 0.95) 50%, rgba(107, 142, 35, 0.6) 70%, transparent 100%)'
+            background: 'linear-gradient(90deg, transparent 0%, var(--accent-mid) 30%, rgba(255, 255, 255, 0.95) 50%, var(--accent-mid) 70%, transparent 100%)'
           }} />
 
           {/* 👈 LEFT SIDE: Hero Branding & Stat Cards */}
@@ -2823,50 +2804,56 @@ export default function App() {
             padding: '3.5rem 3.5rem',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
-            borderRight: '1px solid rgba(107, 142, 35, 0.15)'
+            justifyContent: 'flex-start',
+            gap: '3rem',
+            borderRight: '1px solid var(--border)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
+            {/* Subtle Wave / Gradient Background Decoration */}
+            <div style={{
+              position: 'absolute',
+              top: '40%',
+              left: '50%',
+              width: '180%',
+              height: '180%',
+              background: 'radial-gradient(circle at center, rgba(16, 185, 129, 0.06) 0%, transparent 60%)',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 0,
+              pointerEvents: 'none'
+            }} />
+            <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', opacity: 0.1, pointerEvents: 'none', zIndex: 0 }} viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+              <path fill="var(--accent)" fillOpacity="1" d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,149.3C672,139,768,149,864,165.3C960,181,1056,203,1152,202.7C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+            <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', opacity: 0.15, pointerEvents: 'none', zIndex: 0 }} viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#3B82F6" fillOpacity="1" d="M0,224L60,202.7C120,181,240,139,360,133.3C480,128,600,160,720,181.3C840,203,960,213,1080,202.7C1200,192,1320,160,1380,144L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+            </svg>
+
             {/* Top Logo & Pill Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', position: 'relative', zIndex: 1 }}>
               <img
                 src="/logo-surbhi.svg"
                 style={{
-                  height: '100px',
+                  height: '160px',
                   width: 'auto',
-                  maxWidth: '280px',
+                  maxWidth: '320px',
                   objectFit: 'contain',
-                  filter: 'drop-shadow(0 8px 24px rgba(107, 142, 35, 0.25))'
+                  filter: 'drop-shadow(0 8px 24px var(--shadow-glow))'
                 }}
                 alt="Surbhi Telecom Logo"
               />
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'var(--green-bg)',
-                border: '1px solid rgba(107, 142, 35, 0.28)',
-                padding: '7px 16px',
-                borderRadius: '24px',
-                fontSize: '0.76rem',
-                fontWeight: 800,
-                color: 'var(--green)',
-                letterSpacing: '1px',
-                textTransform: 'uppercase',
-                boxShadow: 'var(--shadow-xs)'
-              }}>
-                <Sparkles size={14} /> SURBHI TELECOM
-              </div>
+
             </div>
 
             {/* Main Hero Section */}
-            <div style={{ margin: '2.5rem 0' }}>
+            <div style={{ margin: '1rem 0', position: 'relative', zIndex: 1 }}>
               <h1 style={{
                 fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
                 fontSize: '3.6rem',
                 fontWeight: 900,
                 lineHeight: 1.05,
                 letterSpacing: '-2px',
-                background: 'linear-gradient(135deg, #0F172A 0%, #3B5311 60%, #6B8E23 100%)',
+                background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 60%, var(--secondary) 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 margin: '0 0 12px 0'
@@ -2878,28 +2865,27 @@ export default function App() {
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontSize: '1.38rem',
                 fontWeight: 800,
-                color: '#334155',
+                color: 'var(--text-primary)',
                 margin: 0,
                 letterSpacing: '-0.4px'
               }}>
                 Personal Wealth & Financial Intelligence
               </h2>
 
-              <p style={{ fontSize: '0.94rem', fontWeight: 600, color: '#64748B', margin: '10px 0 0 0', lineHeight: 1.6, maxWidth: '460px' }}>
+              <p style={{ fontSize: '0.94rem', fontWeight: 600, color: 'var(--text-secondary)', margin: '10px 0 0 0', lineHeight: 1.6, maxWidth: '460px' }}>
                 Real-time daily cashflow liquidity, multi-bank balance management, digital khata ledger, and borrower debt logs strictly isolated for the owner.
               </p>
             </div>
           </div>
 
           {/* 👉 RIGHT SIDE: Embedded Clean Glass Login Box */}
-          <div style={{
+          <div className="ios-glass-box" style={{
             flex: '1 1 380px',
             maxWidth: '430px',
             padding: '3.5rem 2.5rem',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
-            background: 'rgba(255, 255, 255, 0.45)'
+            justifyContent: 'center'
           }}>
             {/* Bento Header */}
             <div style={{ marginBottom: '1.75rem' }}>
@@ -2907,20 +2893,20 @@ export default function App() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: 'var(--green-bg)',
-                border: '1px solid rgba(107, 142, 35, 0.25)',
+                background: 'var(--accent-soft)',
+                border: '1px solid var(--border)',
                 padding: '4px 12px',
                 borderRadius: '20px',
                 fontSize: '0.7rem',
                 fontWeight: 800,
-                color: 'var(--green)',
+                color: 'var(--accent)',
                 marginBottom: '10px'
               }}>
                 <Lock size={12}/> Owner Sign In
               </div>
 
-              <h2 style={{ fontSize: '1.65rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.5px' }}>
-                Welcome Back
+              <h2 style={{ fontSize: '2.4rem', fontFamily: "'Caveat', cursive", fontWeight: 700, color: 'var(--accent)', margin: 0, letterSpacing: '0.5px' }}>
+                Log in malik jii !!
               </h2>
               <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginTop: '4px' }}>
                 Enter your credentials to access your dashboard
@@ -2931,7 +2917,7 @@ export default function App() {
             <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
               {/* Email Field */}
               <div style={{ position: 'relative', width: '100%' }}>
-                <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--green)', display: 'flex' }}>
+                <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', display: 'flex' }}>
                   <Mail size={18} />
                 </div>
                 <input
@@ -2945,7 +2931,7 @@ export default function App() {
                     height: '50px',
                     paddingLeft: '44px',
                     paddingRight: '16px',
-                    background: '#FFFFFF',
+                    background: 'var(--bg-secondary)',
                     border: '1px solid var(--border)',
                     color: 'var(--text-primary)',
                     borderRadius: '14px',
@@ -2957,8 +2943,8 @@ export default function App() {
                     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)'
                   }}
                   onFocus={e => {
-                    e.target.style.borderColor = 'var(--green)';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.15)';
+                    e.target.style.borderColor = 'var(--accent)';
+                    e.target.style.boxShadow = '0 0 0 3px var(--accent-soft)';
                   }}
                   onBlur={e => {
                     e.target.style.borderColor = 'var(--border)';
@@ -2969,7 +2955,7 @@ export default function App() {
 
               {/* Password Field with Eye Toggle */}
               <div style={{ position: 'relative', width: '100%' }}>
-                <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--green)', display: 'flex' }}>
+                <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', display: 'flex' }}>
                   <Lock size={18} />
                 </div>
                 <input
@@ -2983,11 +2969,12 @@ export default function App() {
                     height: '50px',
                     paddingLeft: '44px',
                     paddingRight: '44px',
-                    background: '#FFFFFF',
+                    background: 'var(--bg-secondary)',
                     border: '1px solid var(--border)',
                     color: 'var(--text-primary)',
                     borderRadius: '14px',
-                    fontSize: '0.9rem',
+                    fontSize: (!showPassword && authPassword.length > 0) ? '1.4rem' : '0.9rem',
+                    letterSpacing: (!showPassword && authPassword.length > 0) ? '6px' : 'normal',
                     fontWeight: 700,
                     boxSizing: 'border-box',
                     outline: 'none',
@@ -2995,8 +2982,8 @@ export default function App() {
                     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)'
                   }}
                   onFocus={e => {
-                    e.target.style.borderColor = 'var(--green)';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(107, 142, 35, 0.15)';
+                    e.target.style.borderColor = 'var(--accent)';
+                    e.target.style.boxShadow = '0 0 0 3px var(--accent-soft)';
                   }}
                   onBlur={e => {
                     e.target.style.borderColor = 'var(--border)';
@@ -3037,10 +3024,10 @@ export default function App() {
                   fontWeight: 800,
                   marginTop: '0.4rem',
                   borderRadius: '14px',
-                  background: 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)',
+                  background: 'linear-gradient(135deg, var(--accent) 0%, #3B82F6 100%)',
                   color: '#ffffff',
                   border: 'none',
-                  boxShadow: '0 8px 24px rgba(107, 142, 35, 0.35)',
+                  boxShadow: '0 8px 24px var(--accent-mid)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -3069,7 +3056,7 @@ export default function App() {
 
             {/* Security Footer Stamp */}
             <div style={{ marginTop: '1.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', width: '100%', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-              <Shield size={13} color="var(--green)" /> Private Single-User Portal • Supabase Secured
+              <Shield size={13} color="var(--accent)" /> Private Single-User Portal • Supabase Secured
             </div>
           </div>
         </div>
@@ -3184,16 +3171,16 @@ export default function App() {
   };
 
   const navItems = [
-    { id: 'web-apps', label: 'Links', icon: <Globe size={18}/> },
-    { id: 'dashboard', label: 'Dashboard', icon: <Home size={18}/> },
-    ...(showIncomesNav ? [{ id: 'incomes', label: 'Incomes', icon: <TrendingUp size={18}/> }] : []),
-    ...(showExpensesNav ? [{ id: 'expenses', label: 'Expenses', icon: <TrendingDown size={18}/> }] : []),
-    { id: 'banks', label: 'Banks & Cash', icon: <Building size={18}/> },
-    { id: 'credit-cards', label: 'Credit Cards', icon: <CreditCard size={18}/> },
-    { id: 'borrowers', label: 'Khata / Udhar', icon: <Users size={18}/> },
-    { id: 'samiti', label: 'Samiti', icon: <Target size={18}/> },
-    { id: 'notes', label: 'Notes', icon: <StickyNote size={18}/> },
-    { id: 'personal', label: 'Personal', icon: <Shield size={18}/> }
+    { id: 'web-apps', label: 'Links', icon: <Compass size={16} strokeWidth={2} /> },
+    { id: 'dashboard', label: 'Dashboard', icon: <Home size={16} strokeWidth={2} /> },
+    ...(showIncomesNav ? [{ id: 'incomes', label: 'Incomes', icon: <TrendingUp size={16} strokeWidth={2} /> }] : []),
+    ...(showExpensesNav ? [{ id: 'expenses', label: 'Expenses', icon: <TrendingDown size={16} strokeWidth={2} /> }] : []),
+    { id: 'banks', label: 'Banks & Cash', icon: <Building size={16} strokeWidth={2} /> },
+    { id: 'credit-cards', label: 'Credit Cards', icon: <CreditCard size={16} strokeWidth={2} /> },
+    { id: 'borrowers', label: 'Khata / Udhar', icon: <Users size={16} strokeWidth={2} /> },
+    { id: 'samiti', label: 'Samiti', icon: <Target size={16} strokeWidth={2} /> },
+    { id: 'notes', label: 'Notes', icon: <BookOpen size={16} strokeWidth={2} /> },
+    { id: 'personal', label: 'Personal', icon: <Fingerprint size={16} strokeWidth={2} /> }
   ];
 
   return (
@@ -3205,290 +3192,189 @@ export default function App() {
         <div className="orb orb-4"></div>
       </div>
       <div className="app-layout">
-      <nav className={`top-navbar ${sidebarCollapsed ? 'collapsed' : ''}`}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: sidebarCollapsed ? 'center' : 'space-between',
-          gap: '8px',
-          padding: sidebarCollapsed ? '4px 0 10px 0' : '4px 4px 10px 4px',
-          borderBottom: '1px solid var(--border)',
-          marginBottom: '0.5rem',
-          position: 'relative',
-          width: '100%'
-        }}>
-          {/* Left Naked Logo + Brand Name */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-            <img
-              src="/logo-surbhi.svg"
-              onClick={handleLogoSecretClick}
-              style={{
-                height: sidebarCollapsed ? '32px' : '36px',
-                width: 'auto',
-                maxWidth: '100%',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 4px 10px rgba(107, 142, 35, 0.25))',
-                cursor: 'pointer',
-                flexShrink: 0
-              }}
-              alt="Surbhi Telecom Logo"
-              title="Surbhi Telecom (5x Fast Clicks = Admin Access)"
-            />
-
-            {!sidebarCollapsed && (
-              <div className="brand-text" style={{ minWidth: 0, flex: 1 }}>
-                <div style={{
-                  fontSize: '0.92rem',
-                  fontWeight: 900,
-                  fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
-                  letterSpacing: '0.2px',
-                  background: 'linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  lineHeight: 1.15,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  SURBHI TELECOM
-                </div>
-                <div style={{
-                  fontSize: '0.58rem',
-                  fontWeight: 800,
-                  color: 'var(--text-muted)',
-                  letterSpacing: '1px',
-                  textTransform: 'uppercase',
-                  marginTop: '1px',
-                  whiteSpace: 'nowrap'
-                }}>
-                  Wealth & Business
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Desktop Toggle Button */}
-          <div className="desktop-toggle-btn">
-            {!sidebarCollapsed ? (
-              <button
-                onClick={() => {
-                  setSidebarCollapsed(true);
-                  localStorage.setItem('fb_sidebar_collapsed', 'true');
-                }}
-                title="Collapse Sidebar"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '22px',
-                  height: '22px',
-                  borderRadius: '6px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                  padding: 0
-                }}
-              >
-                <ChevronLeft size={16} />
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setSidebarCollapsed(false);
-                  localStorage.setItem('fb_sidebar_collapsed', 'false');
-                }}
-                title="Expand Sidebar"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '22px',
-                  height: '22px',
-                  borderRadius: '6px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  margin: '4px auto 0 auto'
-                }}
-              >
-                <ChevronRight size={16} />
-              </button>
-            )}
-          </div>
-
-          {/* Mobile Toggle Button */}
-          <button 
-            className="mobile-menu-btn" 
-            onClick={() => setMobileMenuOpen(true)}
+      <nav className="top-navbar">
+        {/* Logo Section */}
+        <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingRight: '1rem' }}>
+          <img
+            src="/logo-surbhi.svg"
+            onClick={handleLogoSecretClick}
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-primary)',
+              height: '56px',
+              width: 'auto',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 4px 12px var(--accent-soft))',
               cursor: 'pointer',
-              padding: '4px'
+              flexShrink: 0
             }}
-          >
-            <Menu size={24} />
-          </button>
+            alt="Surbhi Telecom Logo"
+            title="Surbhi Telecom (5x Fast Clicks = Admin Access)"
+          />
         </div>
 
-        <div className="nav-menu">
-          {navItems.map(it => (
-            <button
-              key={it.id}
-              className={`nav-item ${view === it.id ? 'active' : ''}`}
-              onClick={() => { setView(it.id); setMobileMenuOpen(false); }}
-              title={it.label}
-            >
-              <div className="nav-item-icon">{it.icon}</div>
-              {!sidebarCollapsed && <span className="nav-item-label">{it.label}</span>}
-            </button>
-          ))}
-        </div>
-
-        {/* ── QUICK LINKS (Pinned Web Apps) ── */}
-        {showNavLinks && webApps.filter(a => a.is_pinned).length > 0 && (
-          <div style={{
-            marginBottom: '0.75rem',
-            padding: '0 2px',
-            borderTop: '1px solid var(--border)',
-            paddingTop: '0.75rem',
-          }}>
-            {!sidebarCollapsed && (
-              <div className="quick-links-title" style={{
-                fontSize: '0.65rem',
-                fontWeight: 800,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                padding: '0 12px',
-                marginBottom: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}>
-                <ExternalLink size={10} />
-                Quick Links
+        {/* Navigation Items (Centered horizontally) */}
+        <div className="nav-menu-container" ref={navContainerRef}>
+          <div className="nav-menu">
+            {navItems.slice(0, navVisibleCount).map(it => (
+              <button
+                key={it.id}
+                className={`nav-item ${view === it.id ? 'active' : ''}`}
+                onClick={() => { setView(it.id); setMobileMenuOpen(false); }}
+                title={it.label}
+              >
+                <div className="nav-item-icon">{it.icon}</div>
+                <span className="nav-item-label">{it.label}</span>
+                {view === it.id && (
+                  <motion.div
+                    layoutId="navbar-underline"
+                    initial={false}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 500,
+                      damping: 30,
+                      duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : undefined
+                    }}
+                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--nav-accent)' }}
+                  />
+                )}
+              </button>
+            ))}
+            
+            {navVisibleCount < navItems.length && (
+              <div style={{ position: 'relative', display: 'flex', height: '100%' }}>
+                <button
+                  className="nav-item"
+                  onClick={() => {
+                    const el = document.getElementById('nav-more-dropdown');
+                    if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+                  }}
+                  title="More"
+                >
+                  <MoreHorizontal size={16} strokeWidth={2} />
+                  <span className="nav-item-label">More</span>
+                </button>
+                <div id="nav-more-dropdown" style={{
+                  display: 'none', position: 'absolute', top: '100%', right: '0', marginTop: '0',
+                  background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px',
+                  padding: '8px', flexDirection: 'column', gap: '4px', minWidth: '180px',
+                  boxShadow: 'var(--shadow-lg)', zIndex: 1000
+                }}>
+                  {navItems.slice(navVisibleCount).map(it => (
+                    <button
+                      key={it.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
+                        borderRadius: '6px', color: view === it.id ? 'var(--nav-active-text)' : 'var(--nav-inactive-text)',
+                        background: view === it.id ? 'var(--bg-hover)' : 'transparent',
+                        border: 'none', cursor: 'pointer', textAlign: 'left', fontWeight: 500, fontSize: '13px',
+                        textTransform: 'uppercase', letterSpacing: '0.05em'
+                      }}
+                      onClick={() => { setView(it.id); document.getElementById('nav-more-dropdown').style.display = 'none'; }}
+                    >
+                      <div className="nav-item-icon">{it.icon}</div>
+                      <span style={{ flex: 1 }}>{it.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {webApps.filter(a => a.is_pinned).slice(0, 5).map(app => (
-                <a
-                  key={app.id}
-                  href={app.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={app.title}
-                  className="quick-link-item"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                    gap: '8px',
-                    padding: sidebarCollapsed ? '8px' : '7px 14px',
-                    borderRadius: '10px',
-                    color: 'var(--text-secondary)',
-                    fontWeight: 600,
-                    fontSize: '0.82rem',
-                    textDecoration: 'none',
-                    transition: 'all 0.15s ease',
-                    border: '1px solid transparent',
-                    cursor: 'pointer',
-                    background: 'transparent',
-                    overflow: 'hidden',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = 'var(--bg-hover)';
-                    e.currentTarget.style.color = 'var(--text-primary)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'var(--text-secondary)';
-                  }}
-                >
-                  <AppFavicon title={app.title} url={app.url} size={14} />
-                  {!sidebarCollapsed && (
-                    <span className="quick-link-label" style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      flex: 1,
-                      minWidth: 0,
-                    }}>{app.title}</span>
-                  )}
-                  {!sidebarCollapsed && <ExternalLink size={10} style={{ flexShrink: 0, opacity: 0.4 }} />}
-                </a>
-              ))}
-            </div>
           </div>
-        )}
+        </div>
 
-        {/* Bottom Actions (Theme Toggle & Profile) */}
-        <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', flexDirection: sidebarCollapsed ? 'column' : 'row', alignItems: 'center' }}>
+        {/* Right Actions Section (Quick Links, Theme Toggle, Profile, Mobile Menu) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', height: '100%', paddingLeft: '1rem' }}>
+          
+          {/* Quick Links Dropdown (Replacing old list) */}
+          {showNavLinks && webApps.filter(a => a.is_pinned).length > 0 && (
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <button 
+                title="Quick Links"
+                onClick={() => {
+                  const el = document.getElementById('quick-links-dropdown');
+                  if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '36px', height: '36px', borderRadius: '8px',
+                  background: 'transparent', border: '1px solid transparent',
+                  color: 'var(--nav-inactive-text)', cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--nav-accent)'; e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'var(--nav-inactive-text)'; e.currentTarget.style.background = 'transparent'; }}
+              >
+                <ExternalLink size={18} />
+              </button>
+              
+              <div id="quick-links-dropdown" style={{
+                display: 'none', position: 'absolute', top: '100%', right: '0', marginTop: '12px',
+                background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px',
+                padding: '8px', flexDirection: 'column', gap: '4px', minWidth: '180px',
+                boxShadow: 'var(--shadow-lg)', zIndex: 1000
+              }}>
+                {webApps.filter(a => a.is_pinned).slice(0, 5).map(app => (
+                  <a
+                    key={app.id} href={app.url} target="_blank" rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
+                      borderRadius: '8px', color: 'var(--text-secondary)', textDecoration: 'none',
+                      fontSize: '0.85rem', fontWeight: 600
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                  >
+                    <AppFavicon title={app.title} url={app.url} size={16} />
+                    <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.title}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Theme Toggle */}
           <button
             onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
             title="Toggle Theme"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: sidebarCollapsed ? '40px' : '44px', height: sidebarCollapsed ? '40px' : '44px', borderRadius: '16px',
-              background: 'var(--bg-surface)', border: '1px solid var(--border)',
-              color: 'var(--text-primary)', cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s ease'
+              width: '36px', height: '36px', borderRadius: '8px',
+              background: 'transparent', border: '1px solid transparent',
+              color: 'var(--nav-inactive-text)', cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s ease'
             }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--nav-accent)'; e.currentTarget.style.background = 'var(--bg-hover)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--nav-inactive-text)'; e.currentTarget.style.background = 'transparent'; }}
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           
+          {/* Vertical Divider Hairline */}
+          <div style={{ width: '1px', height: '24px', background: 'var(--nav-border)', margin: '0 4px' }} />
+
+          {/* Profile Details */}
           <div
             className="nav-profile"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              padding: sidebarCollapsed ? '8px' : '10px 12px',
-              borderRadius: '16px',
-              background: 'var(--bg-surface)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid var(--border)',
-              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              flex: 1
-            }}
             onClick={() => setView('settings')}
             title="Account Settings"
           >
-          <div className="profile-avatar" style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--accent) 0%, #3B82F6 100%)',
-            color: '#fff',
-            fontWeight: 800,
-            fontSize: '0.85rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(107, 142, 35, 0.3)',
-            flexShrink: 0
-          }}>
-            {(session?.user?.user_metadata?.full_name || session?.user?.email || 'U')[0].toUpperCase()}
-          </div>
-          {!sidebarCollapsed && (
-            <div className="profile-details" style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+            <div className="profile-avatar">
+              {(session?.user?.user_metadata?.full_name || session?.user?.email || 'U')[0].toUpperCase()}
+            </div>
+            <div className="profile-details" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--nav-body-text)', whiteSpace: 'nowrap' }}>
                 {session?.user?.user_metadata?.full_name || 'Account'}
               </div>
-              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                {session?.user?.email}
-              </div>
             </div>
-          )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button 
+            className="mobile-menu-btn" 
+            onClick={() => setMobileMenuOpen(true)}
+            style={{
+              background: 'transparent', border: 'none', color: 'var(--nav-inactive-text)', cursor: 'pointer', padding: '4px'
+            }}
+          >
+            <Menu size={24} />
+          </button>
+
         </div>
       </nav>
 
@@ -3585,251 +3471,26 @@ export default function App() {
 
         <div className="scroll-area">
 
-          {/* ══ HOME / DASHBOARD ══ */}
+          {/* ══ DASHBOARD ══ */}
           {(view === 'home' || view === 'dashboard') && (
             <div className="fade-in-view">
-              <div className="page-header">
+              {/* Header Section */}
+              <div className="page-header" style={{ marginBottom: '2rem' }}>
                 <div className="page-header-left">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span className="eyebrow">{new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     <DigitalClock />
                   </div>
-                  <h1>Welcome, {session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0]}</h1>
-                </div>
-                <div className="page-header-right">
-                  <MonthSel/>
-                  <button className="btn btn-primary" onClick={() => openModal('Log Cashflow', 'quick-log')}>
-                    <Plus size={15}/> Log Transaction
-                  </button>
-                </div>
-              </div>
-
-              <div className="bento-grid" style={{ gap: '1rem', marginBottom: '2.5rem' }}>
-                <div className="cred-card" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '1.25rem', boxShadow: '0 4px 20px rgba(16, 185, 129, 0.1)', borderRadius: '16px' }}>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}><TrendingUp size={14} style={{ color: 'var(--green)' }}/> Total Income</div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--green)', letterSpacing: '-0.5px' }}>{fmt(totInc)}</div>
-                </div>
-                <div className="cred-card" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '1.25rem', boxShadow: '0 4px 20px rgba(239, 68, 68, 0.1)', borderRadius: '16px' }}>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}><TrendingDown size={14} style={{ color: 'var(--red)' }}/> Total Expenses</div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--red)', letterSpacing: '-0.5px' }}>{fmt(totExp)}</div>
-                </div>
-                <div className="cred-card" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '1.25rem', boxShadow: '0 4px 20px rgba(59, 130, 246, 0.1)', borderRadius: '16px', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', right: -15, top: -15, fontSize: '5rem', opacity: 0.05, animation: 'float 6s ease-in-out infinite' }}>💰</div>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6, zIndex: 1 }}><PieChart size={14} style={{ color: 'var(--blue)' }}/> Net Savings</div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: net >= 0 ? 'var(--blue)' : 'var(--red)', zIndex: 1, letterSpacing: '-0.5px' }}>{(net >= 0 ? '+' : '') + fmt(net)}</div>
-                </div>
-                <div className="cred-card" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '1.25rem', boxShadow: '0 4px 20px rgba(168, 85, 247, 0.1)', borderRadius: '16px', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', right: -15, top: -15, fontSize: '5rem', opacity: 0.05, animation: 'float 6s ease-in-out infinite 1s' }}>🏦</div>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6, zIndex: 1 }}><Briefcase size={14} style={{ color: 'var(--purple)' }}/> Total Assets</div>
-                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--purple)', zIndex: 1, letterSpacing: '-0.5px' }}>{fmt(totalWealth + lentOut)}</div>
-                </div>
-              </div>
-
-              {/* Quick Add Form */}
-              <div className="panel" style={{ padding: '1.5rem', marginBottom: '2.5rem', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
-                  <Plus size={18} style={{ color: 'var(--accent)' }}/>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: 0.5, textTransform: 'uppercase' }}>Quick Entry</h3>
-                </div>
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  const f = e.target;
-                  const date = f.date.value;
-                  const inc = parseFloat(f.income.value) || 0;
-                  const exp = parseFloat(f.expense.value) || 0;
-                  if (!date || (inc === 0 && exp === 0)) { alert('Enter a date and at least one amount.'); return; }
-                  
-                  if (inc > 0) {
-                    saveIncomeExpense(null, date, inc, 'Others', 'income');
-                  }
-                  if (exp > 0) {
-                    saveIncomeExpense(null, date, exp, 'Others', 'expenses');
-                  }
-                  f.reset();
-                  f.date.value = new Date().toISOString().split('T')[0];
-                }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', alignItems: 'end' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transaction Date</label>
-                    <input type="date" name="date" required defaultValue={new Date().toISOString().split('T')[0]} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-hover)', color: 'var(--text-primary)', height: '44px', outline: 'none' }}/>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Income (₹)</label>
-                    <input type="number" name="income" placeholder="0" min="0" step="0.01" style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-hover)', color: 'var(--green)', fontWeight: 800, height: '44px', outline: 'none' }}/>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Expense (₹)</label>
-                    <input type="number" name="expense" placeholder="0" min="0" step="0.01" style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-hover)', color: 'var(--red)', fontWeight: 800, height: '44px', outline: 'none' }}/>
-                  </div>
-                  <button type="submit" className="btn btn-primary" style={{ padding: '0 24px', fontWeight: 800, fontSize: '0.9rem', borderRadius: '8px', textTransform: 'uppercase', letterSpacing: '0.5px', height: '44px' }}>Save Entry</button>
-                </form>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.75rem', marginBottom: '2.5rem' }}>
-                <div className="panel" style={{ padding: '1.5rem' }}>
-                  <div className="panel-header" style={{ background: 'transparent', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '0 0 1rem 0', marginBottom: '1.5rem' }}>
-                    <TrendingUp size={18} style={{ color: 'var(--accent)' }}/>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Cashflow Trend (Full Month)</h3>
-                  </div>
-                  <div style={{ height: '260px', position: 'relative' }}>
-                    <Line data={lineData} options={chartOpts} />
-                  </div>
-                </div>
-
-                <div className="panel" style={{ padding: '1.5rem' }}>
-                  <div className="panel-header" style={{ background: 'transparent', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '0 0 1rem 0', marginBottom: '1.5rem' }}>
-                    <BarChart2 size={18} style={{ color: 'var(--blue)' }}/>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Monthly Income vs Expense</h3>
-                  </div>
-                  <div style={{ height: '260px', position: 'relative' }}>
-                    <Bar data={yearlyBarData} options={{...chartOpts, plugins: {...chartOpts.plugins, legend: { position: 'top', labels: { boxWidth: 12 } }}}} />
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Daily Cashflow Summary</h2>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>Statement for {monthStr}</p>
-                </div>
-              </div>
-
-              <div className="data-table-wrap">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Daily Income (₹)</th>
-                      <th>Daily Expense (₹)</th>
-                      <th>Net Balance (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const map = {};
-                      [...curInc, ...curExp].forEach(item => {
-                        const d = item.date;
-                        if (!map[d]) map[d] = { date: d, inc: 0, exp: 0 };
-                        if (incomes.some(i => i.id === item.id)) map[d].inc += item.amount;
-                        else map[d].exp += item.amount;
-                      });
-                      const daily = Object.values(map).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 12);
-                      
-                      if (daily.length === 0) return <tr><td colSpan="4" className="empty-state">No records for this month</td></tr>;
-                      
-                      return daily.map(item => {
-                        const net = item.inc - item.exp;
-                        return (
-                          <tr key={item.date}>
-                            <td style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{fmtDate(item.date)}</td>
-                            <td style={{ fontWeight: 700, color: 'var(--green)' }}>{item.inc > 0 ? '+' + fmt(item.inc) : '—'}</td>
-                            <td style={{ fontWeight: 700, color: 'var(--red)' }}>{item.exp > 0 ? '-' + fmt(item.exp) : '—'}</td>
-                            <td>
-                              <span className={`badge ${net >= 0 ? 'green' : 'red'}`}>
-                                {net > 0 ? '+' : ''}{fmt(net)}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      });
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* ══ TRANSACTIONS TABLE ══ */}
-              <div style={{ marginBottom: '1rem', marginTop: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Individual Transactions</h2>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>All transactions for {monthStr}</p>
-                </div>
-              </div>
-              <div className="cashflow-split-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                {/* INCOMES TABLE */}
-                <div className="panel data-table-wrap" style={{ marginTop: 0 }}>
-                  <div className="panel-header" style={{ background: 'transparent', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '1rem 1.25rem' }}>
-                    <h3 style={{ color: 'var(--green)', fontSize: '1rem', fontWeight: 800 }}>Income</h3>
-                  </div>
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Category</th>
-                        <th>Amount (₹)</th>
-                        <th style={{ textAlign: 'right' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {curInc.sort((a,b) => new Date(b.date) - new Date(a.date)).map(item => (
-                        <tr key={item.id}>
-                          <td style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{fmtDate(item.date)}</td>
-                          <td><span className="badge" style={{ background: 'var(--green-bg)', color: 'var(--green)', padding: '2px 8px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600 }}>{item.category || 'Others'}</span></td>
-                          <td style={{ fontWeight: 700, color: 'var(--green)' }}>+{fmt(item.amount)}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <div className="action-btns" style={{ justifyContent: 'flex-end' }}>
-                              <button className="btn-icon" title="Edit" onClick={() => openModal('Edit Income', 'income', item)}>
-                                <Edit3 size={13}/>
-                              </button>
-                              <button className="btn-icon danger" title="Delete" onClick={() => deleteIncome(item.id)}>
-                                <Trash2 size={13}/>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {curInc.length === 0 && <tr><td colSpan="4" className="empty-state">No income this month</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* EXPENSES TABLE */}
-                <div className="panel data-table-wrap" style={{ marginTop: 0 }}>
-                  <div className="panel-header" style={{ background: 'transparent', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '1rem 1.25rem' }}>
-                    <h3 style={{ color: 'var(--red)', fontSize: '1rem', fontWeight: 800 }}>Expenses</h3>
-                  </div>
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Category</th>
-                        <th>Amount (₹)</th>
-                        <th style={{ textAlign: 'right' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {curExp.sort((a,b) => new Date(b.date) - new Date(a.date)).map(item => (
-                        <tr key={item.id}>
-                          <td style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{fmtDate(item.date)}</td>
-                          <td><span className="badge" style={{ background: 'var(--red-bg)', color: 'var(--red)', padding: '2px 8px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600 }}>{item.category || 'Others'}</span></td>
-                          <td style={{ fontWeight: 700, color: 'var(--red)' }}>-{fmt(item.amount)}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <div className="action-btns" style={{ justifyContent: 'flex-end' }}>
-                              <button className="btn-icon" title="Edit" onClick={() => openModal('Edit Expense', 'expenses', item)}>
-                                <Edit3 size={13}/>
-                              </button>
-                              <button className="btn-icon danger" title="Delete" onClick={() => deleteExpense(item.id)}>
-                                <Trash2 size={13}/>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {curExp.length === 0 && <tr><td colSpan="4" className="empty-state">No expenses this month</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-
-          {/* ══ DASHBOARD ══ */}
-
-          {view === 'dashboard' && (
-            <div className="fade-in-view">
-              <div className="page-header" style={{ marginBottom: '2rem' }}>
-                <div className="page-header-left">
-                  <span className="eyebrow">Overview</span>
-                  <h1>Dashboard</h1>
+                  <h1>
+                    <span style={{ fontWeight: 400, color: 'var(--text-secondary)' }}>
+                      {(() => {
+                        const h = new Date().getHours();
+                        if (h < 12) return 'Good morning';
+                        if (h < 17) return 'Good afternoon';
+                        return 'Good evening';
+                      })()},
+                    </span> {session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0]}
+                  </h1>
                 </div>
                 <div className="page-header-right" style={{ display: 'flex', gap: '8px' }}>
                   <MonthSel />
@@ -3839,75 +3500,109 @@ export default function App() {
               {/* Premium Bento Dashboard Layout */}
               <div className="dashboard-bento">
 
-                {/* 1. Income */}
-                <div className="panel db-income" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: '4px solid var(--green)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(16, 185, 129, 0.05) 100%)' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>🟢 Total Income</span>
-                  <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--green)', letterSpacing: '-1px' }}>{fmt(totInc)}</span>
-                </div>
-
-                {/* 2. Expense */}
-                <div className="panel db-expense" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: '4px solid var(--red)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(239, 68, 68, 0.05) 100%)' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>🔴 Total Expenses</span>
-                  <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--red)', letterSpacing: '-1px' }}>{fmt(totExp)}</span>
-                </div>
-
-                {/* 3. Savings */}
-                <div className="panel db-savings" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: '4px solid var(--blue)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(59, 130, 246, 0.05) 100%)' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>🔵 Net Savings</span>
-                  <span style={{ fontSize: '2rem', fontWeight: 900, color: net >= 0 ? 'var(--blue)' : 'var(--red)', letterSpacing: '-1px' }}>{fmt(net)}</span>
-                </div>
-
-                {/* 4. Total Dues */}
-                <div className="panel db-dues" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: ccDebt > 0 ? '4px solid var(--red)' : '4px solid var(--green)', background: ccDebt > 0 ? 'linear-gradient(135deg, var(--bg-card) 0%, rgba(239, 68, 68, 0.08) 100%)' : 'linear-gradient(135deg, var(--bg-card) 0%, rgba(16, 185, 129, 0.05) 100%)' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {ccDebt > 0 ? '⚠️ Total Dues' : '✓ Total Dues'}
+                {/* ROW 1: Key Metrics */}
+                <div className="panel db-metric-nw" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: '4px solid var(--accent)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.05) 100%)' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Sparkles size={14} style={{ color: 'var(--accent)' }}/> Net Worth
                   </span>
-                  <span style={{ fontSize: '2rem', fontWeight: 900, color: ccDebt > 0 ? 'var(--red)' : 'var(--green)', letterSpacing: '-1px' }}>{fmt(ccDebt)}</span>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px', marginBottom: 2 }}>{fmt(totalWealth)}</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>(Cash + Bank Balances)</span>
+                </div>
+                
+                <div className="panel db-metric-assets" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: '4px solid var(--purple)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(168, 85, 247, 0.05) 100%)' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Briefcase size={14} style={{ color: 'var(--purple)' }}/> Net Assets
+                  </span>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--purple)', letterSpacing: '-1px', marginBottom: 2 }}>{fmt(totalWealth + lentOut)}</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>(Net Worth + Khata Lent)</span>
                 </div>
 
-                {/* 4. Total Assets */}
-                <div className="panel db-assets" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(168, 85, 247, 0.05) 100%)', borderTop: '4px solid var(--purple)' }}>
-                  <div>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>💼 Total Assets</span>
-                    <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px', lineHeight: 1.1 }}>{fmt(totalWealth + lentOut)}</span>
-                  </div>
-                  <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '14px', borderRadius: '50%', color: 'var(--purple)' }}><IndianRupee size={26} /></div>
+                <div className="panel db-metric-dues" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: ccDebt > 0 ? '4px solid var(--red)' : '4px solid var(--green)', background: ccDebt > 0 ? 'linear-gradient(135deg, var(--bg-card) 0%, rgba(239, 68, 68, 0.08) 100%)' : 'linear-gradient(135deg, var(--bg-card) 0%, rgba(16, 185, 129, 0.05) 100%)' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <CreditCard size={14} style={{ color: ccDebt > 0 ? 'var(--red)' : 'var(--green)' }}/> Credit Card Dues
+                  </span>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: ccDebt > 0 ? 'var(--red)' : 'var(--green)', letterSpacing: '-1px', marginBottom: 2 }}>{fmt(ccDebt)}</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>(Isolated Total Pending Bills)</span>
                 </div>
 
-                {/* 5. Net Worth */}
-                <div className="panel db-net" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.05) 100%)', borderTop: '4px solid var(--accent)' }}>
-                  <div>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>💎 Net Worth</span>
-                    <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px', lineHeight: 1.1 }}>{fmt(totalWealth)}</span>
-                  </div>
-                  <div style={{ background: 'var(--accent-mid)', padding: '14px', borderRadius: '50%', color: 'var(--accent)' }}><Wallet size={26} /></div>
+                <div className="panel db-metric-savings" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: '4px solid var(--blue)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(59, 130, 246, 0.05) 100%)' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <PieChart size={14} style={{ color: 'var(--blue)' }}/> Net Savings
+                  </span>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: net >= 0 ? 'var(--blue)' : 'var(--red)', letterSpacing: '-1px', marginBottom: 2 }}>{(net >= 0 ? '+' : '') + fmt(net)}</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>({monthStr} Income - Expense)</span>
                 </div>
 
-                {/* 6. Cash on Hand */}
-                <div className="panel db-cash" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', flexShrink: 0 }}>
-                    <IndianRupee size={16} style={{ color: 'var(--green)' }}/>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>Cash on Hand</h3>
+                {/* ROW 2: Analytics & Quick Actions */}
+                <div className="panel db-chart-main" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+                  <div className="panel-header" style={{ background: 'transparent', borderBottom: '1px solid var(--border)', padding: '0 0 1rem 0', marginBottom: '1.5rem' }}>
+                    <TrendingUp size={18} style={{ color: 'var(--accent)' }}/>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Cashflow Trend</h3>
                   </div>
-                  <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--green)', letterSpacing: '-1px' }}>{fmt(cash)}</span>
+                  <div style={{ flex: 1, position: 'relative', minHeight: '260px' }}>
+                    <Line data={lineData} options={{ ...chartOpts, maintainAspectRatio: false }} />
                   </div>
                 </div>
 
-                {/* 7. Accounts */}
+                <div className="panel db-quick-add" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
+                    <Plus size={18} style={{ color: 'var(--green)' }}/>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: 0.5, textTransform: 'uppercase' }}>Quick Entry</h3>
+                  </div>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const f = e.target;
+                    const date = f.date.value;
+                    const inc = parseFloat(f.income.value) || 0;
+                    const exp = parseFloat(f.expense.value) || 0;
+                    if (!date || (inc === 0 && exp === 0)) { alert('Enter a date and at least one amount.'); return; }
+                    
+                    if (inc > 0) saveIncomeExpense(null, date, inc, 'Others', 'income');
+                    if (exp > 0) saveIncomeExpense(null, date, exp, 'Others', 'expenses');
+                    f.reset();
+                    f.date.value = new Date().toISOString().split('T')[0];
+                  }} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', flex: 1 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Date</label>
+                      <input type="date" name="date" required defaultValue={new Date().toISOString().split('T')[0]} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-hover)', color: 'var(--text-primary)', height: '44px', outline: 'none' }}/>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Income (₹)</label>
+                        <input type="number" name="income" placeholder="0" min="0" step="0.01" style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-hover)', color: 'var(--green)', fontWeight: 800, height: '44px', outline: 'none', width: '100%' }}/>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Expense (₹)</label>
+                        <input type="number" name="expense" placeholder="0" min="0" step="0.01" style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-hover)', color: 'var(--red)', fontWeight: 800, height: '44px', outline: 'none', width: '100%' }}/>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 'auto' }}>
+                      <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0 24px', fontWeight: 800, fontSize: '0.9rem', borderRadius: '8px', textTransform: 'uppercase', letterSpacing: '0.5px', height: '44px' }}>Save Entry</button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* ROW 3: Distributions & Accounts */}
                 <div className="panel db-accounts" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexShrink: 0, paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Building size={16} style={{ color: 'var(--blue)' }}/>
-                      <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>Account</h3>
+                      <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>Linked Accounts</h3>
                     </div>
                     <span style={{ fontSize: '0.75rem', fontWeight: 800, background: 'rgba(59, 130, 246, 0.15)', color: 'var(--blue)', padding: '4px 10px', borderRadius: '12px' }}>{banks.length} Total</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingRight: '4px' }}>
+                  
+                  {/* Cash on Hand Highlight */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)', borderRadius: '12px', marginBottom: '1rem', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <IndianRupee size={14} style={{ color: 'var(--green)' }}/> Cash on Hand
+                    </span>
+                    <span style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--green)' }}>{fmt(cash)}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingRight: '4px' }}>
                     {getSortedBanks(banks).map(b => {
-                      const currentPin = typeof b.pin_order === 'number' && b.pin_order > 0 
-                        ? b.pin_order 
-                        : (typeof b.is_pinned === 'number' && b.is_pinned > 0 ? b.is_pinned : (b.is_pinned ? 1 : 0));
+                      const currentPin = typeof b.pin_order === 'number' && b.pin_order > 0 ? b.pin_order : (typeof b.is_pinned === 'number' && b.is_pinned > 0 ? b.is_pinned : (b.is_pinned ? 1 : 0));
                       return (
                         <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-hover)', borderRadius: '8px' }}>
                           <div>
@@ -3925,14 +3620,93 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 9. Total Khata */}
-                <div className="panel db-lent-dues" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.05) 100%)', borderTop: '4px solid var(--amber)' }}>
-                  <div>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>🤝 Total Khata</span>
-                    <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px', lineHeight: 1.1 }}>{fmt(lentOut)}</span>
+                <div className="panel db-chart-bar" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+                  <div className="panel-header" style={{ background: 'transparent', borderBottom: '1px solid var(--border)', padding: '0 0 1rem 0', marginBottom: '1.5rem' }}>
+                    <BarChart2 size={18} style={{ color: 'var(--blue)' }}/>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Income vs Expense</h3>
                   </div>
-                  <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '14px', borderRadius: '50%', color: 'var(--amber)' }}><Users size={26} /></div>
+                  <div style={{ flex: 1, position: 'relative', minHeight: '220px' }}>
+                    <Bar data={yearlyBarData} options={{ ...chartOpts, maintainAspectRatio: false, plugins: { ...chartOpts.plugins, legend: { position: 'top', labels: { boxWidth: 12 } } } }} />
+                  </div>
                 </div>
+
+                <div className="panel db-khata" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexShrink: 0, paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Users size={16} style={{ color: 'var(--amber)' }}/>
+                      <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>Khata Overview</h3>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: 'var(--bg-hover)', borderRadius: '12px', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>You Lent (To Receive)</span>
+                    <span style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--green)' }}>{fmt(lentOut)}</span>
+                  </div>
+                  
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                      Track people who owe you money in the Khata section.
+                    </p>
+                  </div>
+                  
+                  <button className="btn" onClick={() => setView('borrowers')} style={{ width: '100%', marginTop: 'auto', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--amber)', fontWeight: 800, border: 'none', padding: '10px' }}>
+                    Manage Khata
+                  </button>
+                </div>
+
+                {/* ROW 4: Daily Cashflow Summary */}
+                <div className="panel db-transactions data-table-wrap" style={{ padding: '0', overflow: 'hidden' }}>
+                  <div className="panel-header" style={{ background: 'transparent', borderBottom: '1px solid var(--border)', padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800 }}>Daily Cashflow Summary</h3>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{monthStr} Overview</span>
+                  </div>
+                  <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table className="data-table">
+                      <thead style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
+                        <tr>
+                          <th>Date</th>
+                          <th style={{ textAlign: 'right', color: 'var(--green)' }}>Income (+)</th>
+                          <th style={{ textAlign: 'right', color: 'var(--red)' }}>Expense (-)</th>
+                          <th style={{ textAlign: 'right' }}>Net Profit/Loss</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const dailyData = [];
+                          for (let i = 1; i <= daysInMonth; i++) {
+                            const d = new Date(month.getFullYear(), month.getMonth(), i);
+                            if (d > new Date()) continue; // Skip future dates
+                            const dStr = d.toDateString();
+                            const inc = curInc.filter(x => new Date(x.date).toDateString() === dStr).reduce((s, x) => s + x.amount, 0);
+                            const exp = curExp.filter(x => new Date(x.date).toDateString() === dStr).reduce((s, x) => s + x.amount, 0);
+                            if (inc > 0 || exp > 0) {
+                              dailyData.push({ date: d, inc, exp, net: inc - exp });
+                            }
+                          }
+                          dailyData.sort((a,b) => b.date - a.date);
+                          
+                          if (dailyData.length === 0) return <tr><td colSpan="4" className="empty-state">No transactions in {monthStr}.</td></tr>;
+
+                          return dailyData.map(d => (
+                            <tr key={d.date.getTime()}>
+                              <td style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{fmtDate(d.date.toISOString().split('T')[0])}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: d.inc > 0 ? 'var(--green)' : 'var(--text-muted)' }}>
+                                {d.inc > 0 ? `+${fmt(d.inc)}` : '-'}
+                              </td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: d.exp > 0 ? 'var(--red)' : 'var(--text-muted)' }}>
+                                {d.exp > 0 ? `-${fmt(d.exp)}` : '-'}
+                              </td>
+                              <td style={{ textAlign: 'right', fontWeight: 800, color: d.net >= 0 ? 'var(--blue)' : 'var(--red)', fontSize: '0.95rem' }}>
+                                {d.net >= 0 ? '+' : ''}{fmt(d.net)}
+                              </td>
+                            </tr>
+                          ));
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
@@ -5104,7 +4878,7 @@ export default function App() {
                           cursor: 'pointer',
                           whiteSpace: 'nowrap',
                           background: webAppCategoryFilter === cat ? 'var(--text-primary)' : 'var(--bg-base)',
-                          color: webAppCategoryFilter === cat ? '#ffffff' : 'var(--text-secondary)',
+                          color: webAppCategoryFilter === cat ? 'var(--text-inverse)' : 'var(--text-secondary)',
                           transition: 'all 0.15s ease'
                         }}
                       >
