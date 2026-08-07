@@ -297,8 +297,18 @@ input, select, textarea { font-family: var(--font); outline: none; }
 .nav-profile {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   cursor: pointer;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 1.25rem 4px 6px;
+  height: 44px;
+  transition: all 0.2s ease;
+}
+.nav-profile:hover {
+  background: var(--bg-hover);
+  border-color: var(--nav-accent);
 }
 .profile-avatar {
   width: 32px;
@@ -2979,14 +2989,17 @@ input, select, textarea { font-family: var(--font); outline: none; }
   gap: 12px;
 }
 .navbar-logo-img {
-  height: 40px;
-  max-height: 100%;
+  height: 160px;
+  max-height: none;
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
   border-radius: 8px;
   cursor: pointer;
   filter: drop-shadow(0 4px 12px var(--accent-soft));
+  margin-top: -60px;
+  margin-bottom: -60px;
+  margin-left: -30px;
 }
 @media (max-width: 768px) {
   .navbar-logo-img {
