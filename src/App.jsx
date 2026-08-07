@@ -3215,21 +3215,8 @@ export default function App() {
                 onClick={() => { setView(it.id); setMobileMenuOpen(false); }}
                 title={it.label}
               >
-                <div className="nav-item-icon">{it.icon}</div>
+                <div className="nav-item-icon" style={{ fontSize: '1rem', display: 'flex', alignItems: 'center' }}>{it.icon}</div>
                 <span className="nav-item-label">{it.label}</span>
-                {view === it.id && (
-                  <motion.div
-                    layoutId="navbar-underline"
-                    initial={false}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 500,
-                      damping: 30,
-                      duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : undefined
-                    }}
-                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: 'var(--nav-accent)' }}
-                  />
-                )}
               </button>
             ))}
             
