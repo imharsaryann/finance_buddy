@@ -20,7 +20,8 @@ export default defineConfig({
           {
             src: '/logo-surbhi.svg',
             sizes: 'any',
-            type: 'image/svg+xml'
+            type: 'image/svg+xml',
+            purpose: 'any'
           }
         ]
       }

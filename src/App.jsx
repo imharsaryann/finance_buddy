@@ -2700,17 +2700,7 @@ export default function App() {
     </div>
   );
 
-  // ─── StatCard sub-component ───────────────────────
-  const StatCard = ({ icon, color, label, value, valueColor, sub }) => (
-    <div className="stat-card">
-      <div className={`stat-icon ${color}`}>{icon}</div>
-      <div className="stat-body">
-        <span className="stat-label">{label}</span>
-        <span className={`stat-value ${valueColor || ''}`}>{value}</span>
-        {sub && <div className="stat-sub">{sub}</div>}
-      </div>
-    </div>
-  );
+
 
   // ─────────────────────────────────────────────────
   //   RENDER
@@ -3382,38 +3372,64 @@ export default function App() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
-            initial={{ opacity: 0, y: -20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
             className="mobile-menu-overlay"
+            onClick={() => setMobileMenuOpen(false)}
           >
-            <div className="mobile-menu-content">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-                <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                  <X size={24} />
+            <motion.div 
+              initial={{ x: '-100%' }} 
+              animate={{ x: 0 }} 
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="mobile-menu-content"
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <img src="/logo-surbhi.svg" alt="Surbhi Telecom Logo" style={{ height: '28px', width: 'auto', borderRadius: '4px' }} />
+                  <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Finance Buddy</span>
+                </div>
+                <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}>
+                  <X size={20} />
                 </button>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
                 {navItems.map(it => (
                   <button
                     key={it.id}
                     className={`nav-item ${view === it.id ? 'active' : ''}`}
-                    style={{ width: '100%', padding: '12px', justifyContent: 'flex-start' }}
+                    style={{ width: '100%', padding: '12px 14px', justifyContent: 'flex-start', borderRadius: '12px' }}
                     onClick={() => { setView(it.id); setMobileMenuOpen(false); }}
                   >
                     <div style={{ flexShrink: 0, fontSize: '1.2rem', lineHeight: 1 }}>{it.icon}</div>
-                    <span className="nav-item-label" style={{ fontSize: '1.1rem' }}>{it.label}</span>
+                    <span className="nav-item-label" style={{ fontSize: '1rem', fontWeight: 700 }}>{it.label}</span>
                   </button>
                 ))}
+              </div>
+              
+              <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--grad-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1020', fontWeight: 'bold' }}>
+                    {session?.user?.user_metadata?.full_name?.charAt(0) || 'U'}
+                  </div>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                      {session?.user?.user_metadata?.full_name || 'My Account'}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{session?.user?.email}</div>
+                  </div>
+                </div>
                 <button 
                   className="btn" 
-                  style={{ background: 'var(--red-bg)', color: 'var(--red)', width: '100%', marginTop: '20px', padding: '12px', fontWeight: 800, justifyContent: 'center' }}
+                  style={{ background: 'var(--red-bg)', color: 'var(--red)', width: '100%', padding: '12px', fontWeight: 800, justifyContent: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}
                   onClick={() => supabase.auth.signOut()}
                 >
-                  Logout
+                  <LogOut size={16} style={{ marginRight: 6 }}/> Logout
                 </button>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -3531,6 +3547,20 @@ export default function App() {
                   </span>
                   <span style={{ fontSize: '2rem', fontWeight: 900, color: net >= 0 ? 'var(--blue)' : 'var(--red)', letterSpacing: '-1px', marginBottom: 2 }}>{(net >= 0 ? '+' : '') + fmt(net)}</span>
                   <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>({monthStr} Income - Expense)</span>
+                </div>
+
+                <div className="panel db-metric-inc" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: '4px solid var(--green)' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <TrendingUp size={14} style={{ color: 'var(--green)' }}/> Total Income ({monthStr})
+                  </span>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--green)', letterSpacing: '-1px', marginBottom: 2 }}>{fmt(totInc)}</span>
+                </div>
+
+                <div className="panel db-metric-exp" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderTop: '4px solid var(--red)' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <TrendingDown size={14} style={{ color: 'var(--red)' }}/> Total Expense ({monthStr})
+                  </span>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--red)', letterSpacing: '-1px', marginBottom: 2 }}>{fmt(totExp)}</span>
                 </div>
 
                 {/* ROW 2: Analytics & Quick Actions */}
@@ -3675,7 +3705,6 @@ export default function App() {
                           const dailyData = [];
                           for (let i = 1; i <= daysInMonth; i++) {
                             const d = new Date(month.getFullYear(), month.getMonth(), i);
-                            if (d > new Date()) continue; // Skip future dates
                             const dStr = d.toDateString();
                             const inc = curInc.filter(x => new Date(x.date).toDateString() === dStr).reduce((s, x) => s + x.amount, 0);
                             const exp = curExp.filter(x => new Date(x.date).toDateString() === dStr).reduce((s, x) => s + x.amount, 0);
@@ -3689,7 +3718,7 @@ export default function App() {
 
                           return dailyData.map(d => (
                             <tr key={d.date.getTime()}>
-                              <td style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{fmtDate(d.date.toISOString().split('T')[0])}</td>
+                              <td style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{d.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                               <td style={{ textAlign: 'right', fontWeight: 700, color: d.inc > 0 ? 'var(--green)' : 'var(--text-muted)' }}>
                                 {d.inc > 0 ? `+${fmt(d.inc)}` : '-'}
                               </td>
@@ -4161,61 +4190,68 @@ export default function App() {
                 </div>
 
                 {/* Top Metrics Bento Grid */}
-                <div style={{
+                <div className="cc-metrics-bento" style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                   gap: '1.25rem'
                 }}>
                   {/* Card 1: Total Limit */}
-                  <div className="panel" style={{ padding: '1.25rem 1.5rem', borderRadius: 'var(--r-xl)', border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <CreditCard size={14} color="var(--accent)" /> Total Credit Limit
+                  <div className="panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '3px solid var(--accent)' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <CreditCard size={14} style={{ color: 'var(--accent)' }} /> Total Limit
                     </div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '8px', letterSpacing: '-0.5px' }}>
-                      ₹{totalLimit.toLocaleString('en-IN')}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '4px' }}>
-                      {creditCards.length} Active {creditCards.length === 1 ? 'Card' : 'Cards'}
+                    <div style={{ marginTop: '1rem' }}>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+                        {fmt(totalLimit)}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '2px' }}>
+                        {creditCards.length} Active {creditCards.length === 1 ? 'Card' : 'Cards'}
+                      </div>
                     </div>
                   </div>
 
                   {/* Card 2: Total Outstanding Debt */}
-                  <div className="panel" style={{ padding: '1.25rem 1.5rem', borderRadius: 'var(--r-xl)', border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <TrendingUp size={14} color="var(--red)" /> Total Outstanding Debt
+                  <div className="panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: totalDebt > 0 ? '3px solid var(--red)' : '3px solid var(--green)' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: totalDebt > 0 ? 'var(--red)' : 'var(--green)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <TrendingUp size={14} /> Total Outstanding
                     </div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: totalDebt > 0 ? 'var(--red)' : 'var(--green)', marginTop: '8px', letterSpacing: '-0.5px' }}>
-                      ₹{totalDebt.toLocaleString('en-IN')}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '4px' }}>
-                      {creditCards.filter(c => parseFloat(c.outstanding) > 0).length} Cards With Due Balance
+                    <div style={{ marginTop: '1rem' }}>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 900, color: totalDebt > 0 ? 'var(--red)' : 'var(--green)', letterSpacing: '-0.5px' }}>
+                        {fmt(totalDebt)}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '2px' }}>
+                        {creditCards.filter(c => parseFloat(c.outstanding) > 0).length} Cards With Due Balance
+                      </div>
                     </div>
                   </div>
 
                   {/* Card 3: Available Credit */}
-                  <div className="panel" style={{ padding: '1.25rem 1.5rem', borderRadius: 'var(--r-xl)', border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <ShieldCheck size={14} color="var(--green)" /> Available Credit
+                  <div className="panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '3px solid var(--green)' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ShieldCheck size={14} /> Available Credit
                     </div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--green)', marginTop: '8px', letterSpacing: '-0.5px' }}>
-                      ₹{availableCredit.toLocaleString('en-IN')}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '4px' }}>
-                      Ready Liquidity Buffer
+                    <div style={{ marginTop: '1rem' }}>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--green)', letterSpacing: '-0.5px' }}>
+                        {fmt(availableCredit)}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '2px' }}>
+                        Ready Liquidity Buffer
+                      </div>
                     </div>
                   </div>
 
                   {/* Card 4: Utilization Gauge */}
-                  <div className="panel" style={{ padding: '1.25rem 1.5rem', borderRadius: 'var(--r-xl)', border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: utilizationPct > 30 ? 'var(--amber)' : 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div className="panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: utilizationPct > 30 ? '3px solid var(--amber)' : '3px solid var(--green)' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: utilizationPct > 30 ? 'var(--amber)' : 'var(--green)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Zap size={14} /> Credit Utilization
                     </div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: utilizationPct > 50 ? 'var(--red)' : utilizationPct > 30 ? 'var(--amber)' : 'var(--green)', marginTop: '8px', letterSpacing: '-0.5px' }}>
-                      {utilizationPct.toFixed(1)}%
-                    </div>
-                    {/* Utilization Progress Bar */}
-                    <div style={{ width: '100%', height: '6px', borderRadius: '4px', background: 'var(--border)', marginTop: '8px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${utilizationPct}%`, background: utilizationPct > 50 ? 'var(--red)' : utilizationPct > 30 ? 'var(--amber)' : 'var(--green)', borderRadius: '4px', transition: 'width 0.3s ease' }} />
+                    <div style={{ marginTop: '1rem' }}>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 900, color: utilizationPct > 50 ? 'var(--red)' : utilizationPct > 30 ? 'var(--amber)' : 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+                        {utilizationPct.toFixed(1)}%
+                      </div>
+                      <div style={{ width: '100%', height: '4px', borderRadius: '2px', background: 'var(--border)', marginTop: '6px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${utilizationPct}%`, background: utilizationPct > 50 ? 'var(--red)' : utilizationPct > 30 ? 'var(--amber)' : 'var(--green)', borderRadius: '2px', transition: 'width 0.3s ease' }} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -4291,136 +4327,99 @@ export default function App() {
                       return (
                         <div
                           key={card.id}
+                          className="panel"
                           style={{
-                            borderRadius: '24px',
-                            background: 'var(--bg-card)',
-                            border: '1px solid var(--border)',
-                            padding: '1.5rem',
-                            boxShadow: 'var(--shadow-sm)',
+                            padding: '1.25rem',
                             display: 'flex',
                             flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            gap: '1.25rem',
+                            gap: '1rem',
                             position: 'relative',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            borderTop: debt > 0 ? '3px solid var(--amber)' : '3px solid var(--green)'
                           }}
                         >
-                          {/* Top Card Gradient Accent */}
-                          <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: '4px',
-                            background: debt > 0 ? 'linear-gradient(90deg, #EF4444 0%, #F59E0B 100%)' : 'linear-gradient(90deg, #10B981 0%, #6B8E23 100%)'
-                          }} />
-
-                          {/* 🧠 SMART SPEND ADVISOR BADGE */}
-                          <div style={{
-                            background: adviceBadgeBg,
-                            border: `1px solid ${adviceBorder}`,
-                            borderRadius: '14px',
-                            padding: '10px 14px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '4px'
-                          }}>
-                            <div style={{ fontSize: '0.74rem', fontWeight: 900, color: adviceColor, display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.3px', textTransform: 'uppercase' }}>
-                              {adviceIcon} {adviceTitle}
-                            </div>
-                            <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', fontWeight: 600, lineHeight: 1.35 }}>
-                              {adviceSub}
-                            </div>
-                          </div>
-
                           {/* Card Header Info */}
-                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-                            <div>
-                              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                {card.bankName}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <CreditCard size={20} color="var(--accent)" />
                               </div>
-                              <div style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '2px' }}>
-                                {card.cardName || 'Credit Card'}
-                              </div>
-                              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, marginTop: '2px', fontFamily: 'monospace' }}>
-                                •••• •••• •••• {card.cardNumber || 'XXXX'}
+                              <div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>
+                                  {card.cardName || 'Credit Card'}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '4px', display: 'flex', gap: '6px' }}>
+                                  <span style={{ textTransform: 'uppercase', color: 'var(--accent)' }}>{card.bankName}</span>
+                                  <span>•</span>
+                                  <span style={{ fontFamily: 'monospace' }}>**{card.cardNumber || 'XXXX'}</span>
+                                </div>
                               </div>
                             </div>
-
+                            
                             {/* Action Icons */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <button
-                                onClick={() => setModal({ open: true, type: 'card', item: card })}
-                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px' }}
-                                title="Edit Card"
-                              >
+                              <button onClick={() => setModal({ open: true, type: 'card', item: card })} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
                                 <Edit3 size={15} />
                               </button>
-                              <button
-                                onClick={() => {
-                                  if (confirm(`Delete credit card ${card.bankName} (${card.cardName})?`)) {
-                                    deleteCreditCard(card.id);
-                                  }
-                                }}
-                                style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', padding: '6px' }}
-                                title="Delete Card"
-                              >
+                              <button onClick={() => { if (confirm(`Delete ${card.cardName}?`)) deleteCreditCard(card.id); }} style={{ background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', padding: '4px' }}>
                                 <Trash2 size={15} />
                               </button>
                             </div>
                           </div>
 
-                          {/* Debt vs Limit Info */}
-                          <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>Current Outstanding Due</span>
-                              <span style={{ fontSize: '1.18rem', fontWeight: 900, color: debt > 0 ? 'var(--red)' : 'var(--green)' }}>
-                                ₹{debt.toLocaleString('en-IN')}
-                              </span>
+                          {/* 🧠 SMART SPEND ADVISOR BADGE */}
+                          <div style={{
+                            background: adviceBadgeBg,
+                            border: `1px solid ${adviceBorder}`,
+                            borderRadius: '10px',
+                            padding: '8px 12px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '2px'
+                          }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 900, color: adviceColor, display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase' }}>
+                              {adviceIcon} {adviceTitle}
                             </div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                              {adviceSub}
+                            </div>
+                          </div>
 
+                          {/* Slim Debt vs Limit Info */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                              <div>
+                                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Outstanding Due</div>
+                                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: debt > 0 ? 'var(--red)' : 'var(--green)', lineHeight: 1, marginTop: '2px' }}>
+                                  {fmt(debt)}
+                                </div>
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>Limit: {fmt(limit)}</div>
+                                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--green)' }}>Avail: {fmt(avail)}</div>
+                              </div>
+                            </div>
                             {/* Progress bar */}
-                            <div style={{ width: '100%', height: '6px', borderRadius: '3px', background: 'var(--border)', overflow: 'hidden', margin: '8px 0' }}>
-                              <div style={{ height: '100%', width: `${cardUtil}%`, background: cardUtil > 50 ? 'var(--red)' : 'var(--green)', borderRadius: '3px', transition: 'width 0.3s ease' }} />
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, marginTop: '6px' }}>
-                              <span>Total Limit: ₹{limit.toLocaleString('en-IN')}</span>
-                              <span>Available: ₹{avail.toLocaleString('en-IN')}</span>
+                            <div style={{ width: '100%', height: '4px', borderRadius: '2px', background: 'var(--border)', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${cardUtil}%`, background: cardUtil > 50 ? 'var(--red)' : 'var(--green)', borderRadius: '2px' }} />
                             </div>
                           </div>
 
-                          {/* Due Date & Statement Cycle Info */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', fontWeight: 700 }}>
-                              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <Calendar size={13} /> Statement Date:
-                              </span>
-                              <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Day {card.statementDate || '--'} of month</span>
+                          {/* Action Buttons & Dates */}
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                                <Calendar size={10} style={{ marginRight: 2 }}/> Stmt: {card.statementDate || '--'}th
+                              </div>
+                              <div style={{ fontSize: '0.65rem', fontWeight: 700, color: debt > 0 ? 'var(--red)' : 'var(--text-muted)' }}>
+                                <Clock size={10} style={{ marginRight: 2 }}/> Due: {card.dueDate || '--'}th
+                              </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', fontWeight: 700 }}>
-                              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <Clock size={13} /> Payment Due Date:
-                              </span>
-                              <span style={{ color: debt > 0 ? 'var(--red)' : 'var(--green)', fontWeight: 800 }}>Day {card.dueDate || '--'} of month ({smart.statusText})</span>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                            <button
-                              className="btn btn-secondary"
-                              onClick={() => setCcSpendModal({ open: true, card })}
-                              style={{ padding: '9px 12px', fontSize: '0.82rem', fontWeight: 800, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                            >
-                              <TrendingDown size={14} /> Log Spend
+                            <button className="btn btn-secondary" onClick={() => setCcSpendModal({ open: true, card })} style={{ padding: '6px 10px', fontSize: '0.75rem', fontWeight: 800 }}>
+                              Log Spend
                             </button>
-                            <button
-                              className="btn btn-primary"
-                              onClick={() => setCcSpendModal({ open: true, card, isRepay: true })}
-                              style={{ padding: '9px 12px', fontSize: '0.82rem', fontWeight: 800, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                            >
-                              <CheckCircle size={14} /> Pay Bill
+                            <button className="btn btn-primary" onClick={() => setCcSpendModal({ open: true, card, isRepay: true })} style={{ padding: '6px 10px', fontSize: '0.75rem', fontWeight: 800 }}>
+                              Pay Bill
                             </button>
                           </div>
                         </div>
@@ -4489,62 +4488,88 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="stat-grid" style={{ marginBottom: '1.75rem' }}>
-                <StatCard icon={<TrendingUp size={18}/>}   color="blue"  label="Total Dues"       value={fmt(borrowers.reduce((s, b) => s + b.principal, 0))}/>
-                <StatCard icon={<CheckCircle size={18}/>}  color="green" label="Total Recovered"  value={fmt(borrowers.reduce((s, b) => s + b.repaid, 0))} valueColor="green"/>
-                <StatCard icon={<AlertTriangle size={18}/>} color="red" label="Outstanding Debt" value={fmt(lentOut)} valueColor="red"/>
+              <div className="stat-grid" style={{ marginBottom: '1.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: '3px solid var(--accent)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><TrendingUp size={14} color="var(--accent)"/> Total Dues</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{fmt(borrowers.reduce((s, b) => s + b.principal, 0))}</div>
+                </div>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: '3px solid var(--green)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={14}/> Total Recovered</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--green)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{fmt(borrowers.reduce((s, b) => s + b.repaid, 0))}</div>
+                </div>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: '3px solid var(--red)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--red)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><AlertTriangle size={14}/> Outstanding Debt</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--red)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{fmt(lentOut)}</div>
+                </div>
               </div>
 
-              <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
                 {borrowers.map(bw => {
                   const rem = bw.principal - bw.repaid;
                   const settled = rem <= 0;
                   return (
-                    <div key={bw.id} className="khata-card" style={{ borderLeft: settled ? '6px solid var(--green)' : '6px solid var(--red)' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                          <div className="khata-name">{bw.name}</div>
-                          {settled && <span className="khata-badge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--green)' }}>Settled</span>}
-                          {!settled && <span className="khata-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--red)' }}>Owes You</span>}
+                    <div key={bw.id} className="panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', borderLeft: settled ? '4px solid var(--green)' : '4px solid var(--red)', position: 'relative' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+                            {bw.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{bw.name}</div>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginTop: '6px' }}>Given: {fmtDate(bw.date)}</div>
+                          </div>
                         </div>
-                        <div className="khata-desc">Given: {fmtDate(bw.date)} &bull; Original: {fmt(bw.principal)}</div>
-                      </div>
-                      
-                      <div style={{ textAlign: 'right', marginRight: '1.5rem' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: 4 }}>{settled ? 'Balance' : 'Remaining'}</div>
-                        <div className="khata-amount" style={{ color: settled ? 'var(--green)' : 'var(--red)' }}>{fmt(rem)}</div>
+                        {settled ? <span style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--green)', fontSize: '0.7rem', fontWeight: 800 }}>Settled</span> : <span style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--red)', fontSize: '0.7rem', fontWeight: 800 }}>Owes You</span>}
                       </div>
 
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="btn btn-ghost" style={{ height: '40px', padding: '0 16px', color: 'var(--text-primary)', border: '1px solid var(--border-strong)' }} onClick={() => openModal('Edit Khata Entry', 'borrower', bw)}>
-                          <Edit3 size={16}/>
+                      <div style={{ background: 'var(--bg-base)', borderRadius: '12px', padding: '1rem', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Original Amount</div>
+                          <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>{fmt(bw.principal)}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: settled ? 'var(--green)' : 'var(--red)', textTransform: 'uppercase' }}>{settled ? 'Balance' : 'Remaining Due'}</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: settled ? 'var(--green)' : 'var(--red)', lineHeight: 1, marginTop: '2px' }}>{fmt(rem)}</div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: settled ? '1fr 1fr' : '1fr 1fr 1fr', gap: '8px' }}>
+                        <button className="btn btn-secondary" style={{ padding: '8px', fontSize: '0.8rem', fontWeight: 700, display: 'flex', justifyContent: 'center' }} onClick={() => openModal('Edit Khata Entry', 'borrower', bw)}>
+                          <Edit3 size={15} />
                         </button>
                         {!settled ? (
                           <>
-                            <button className="btn btn-primary" style={{ height: '40px', padding: '0 20px', fontWeight: 700 }}
+                            <button className="btn btn-primary" style={{ padding: '8px', fontSize: '0.8rem', fontWeight: 800 }}
                               onClick={() => {
                                 const a = prompt(`Enter repayment amount (Remaining: ${fmt(rem)}):`);
                                 if (a && parseFloat(a) > 0) receiveRepayment(bw.id, parseFloat(a));
                               }}>
                               Receive
                             </button>
-                            <button className="btn btn-ghost" style={{ height: '40px', padding: '0 16px', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', fontWeight: 600 }}
+                            <button className="btn btn-secondary" style={{ padding: '8px', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)', border: '1px solid var(--border-strong)' }}
                               onClick={() => { if (confirm(`Settle full ₹${rem} for ${bw.name}?`)) settleBorrower(bw.id); }}>
-                              Settle All
+                              Settle
                             </button>
                           </>
                         ) : (
-                          <button className="btn btn-danger" style={{ height: '40px', padding: '0 16px' }}
+                          <button className="btn btn-danger" style={{ padding: '8px', fontSize: '0.8rem', display: 'flex', justifyContent: 'center' }}
                             onClick={() => { if (confirm(`Delete borrower record for ${bw.name}?`)) deleteBorrower(bw.id); }}>
-                            <Trash2 size={16}/>
+                            <Trash2 size={15}/> Delete
                           </button>
                         )}
                       </div>
                     </div>
                   );
                 })}
-                {borrowers.length === 0 && <div className="empty-state">No entries in your Khata.</div>}
               </div>
+              {borrowers.length === 0 && (
+                <div className="panel" style={{ padding: '4rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--bg-hover)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}><Users size={32}/></div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 8px 0' }}>No Khata Entries</h2>
+                  <p style={{ color: 'var(--text-muted)', margin: '0 0 1.5rem 0', maxWidth: '400px' }}>Keep track of money you've lent to friends or family here.</p>
+                  <button className="btn btn-primary" onClick={() => openModal('Add Khata Entry', 'borrower')}><Plus size={16}/> Add New Entry</button>
+                </div>
+              )}
             </div>
           )}
 
@@ -4563,10 +4588,19 @@ export default function App() {
                   </button>
                 </div>
               </div>
-              <div className="stat-grid" style={{ marginBottom: '1.75rem' }}>
-                <StatCard icon={<Target size={18}/>}   color="purple"  label="Active Samitis"   value={samitis.length} />
-                <StatCard icon={<CheckCircle size={18}/>} color="green" label="Total Paid Amount" value={fmt(totalSamitiInvested)} valueColor="green"/>
-                <StatCard icon={<TrendingUp size={18}/>} color="blue" label="Expected Returns" value={fmt(samitis.reduce((s, x) => s + Number(x.maturity_amount), 0))} />
+              <div className="stat-grid" style={{ marginBottom: '1.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: '3px solid var(--purple)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><Target size={14} color="var(--purple)"/> Active Samitis</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{samitis.length}</div>
+                </div>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: '3px solid var(--green)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={14}/> Total Paid Amount</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--green)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{fmt(totalSamitiInvested)}</div>
+                </div>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: '3px solid var(--blue)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--blue)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><TrendingUp size={14}/> Expected Returns</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--blue)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{fmt(samitis.reduce((s, x) => s + Number(x.maturity_amount), 0))}</div>
+                </div>
               </div>
 
               <div className="item-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
@@ -4669,7 +4703,6 @@ export default function App() {
               <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginTop: '0.5rem', maxWidth: '400px' }}>This feature is currently under development. Coming Soon!</p>
             </div>
           )}
-
           {/* ══ PERSONAL RESERVE & VAULT ══ */}
           {view === 'personal' && (
             <div className="fade-in-view" style={{ maxWidth: '1100px', margin: '0 auto' }}>
@@ -4705,25 +4738,28 @@ export default function App() {
               </div>
 
               {/* Glass Stat Grid */}
-              <div className="stat-grid" style={{ marginBottom: '1.75rem' }}>
-                <StatCard icon={<Shield size={20}/>} color="purple" label="Total Reserve Target" value={fmt(vaultTarget)} />
-                <StatCard icon={<Wallet size={20}/>} color="green" label="Available Balance" value={fmt(availableVaultBalance)} valueColor="green" />
-                <StatCard icon={<TrendingDown size={20}/>} color="red" label="Used / Outstanding" value={fmt(netVaultUsed)} valueColor={netVaultUsed > 0 ? 'red' : ''} />
+              <div className="stat-grid" style={{ marginBottom: '1.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: '3px solid var(--purple)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><Shield size={14} color="var(--purple)"/> Total Reserve Target</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{fmt(vaultTarget)}</div>
+                </div>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: '3px solid var(--green)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--green)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><Wallet size={14}/> Available Balance</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--green)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{fmt(availableVaultBalance)}</div>
+                </div>
+                <div className="panel" style={{ padding: '1.25rem', borderTop: netVaultUsed > 0 ? '3px solid var(--red)' : '3px solid var(--green)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: netVaultUsed > 0 ? 'var(--red)' : 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}><TrendingDown size={14}/> Used / Outstanding</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: netVaultUsed > 0 ? 'var(--red)' : 'var(--text-primary)', marginTop: '1rem', letterSpacing: '-0.5px' }}>{fmt(netVaultUsed)}</div>
+                </div>
               </div>
 
               {/* Replenishment Progress Panel */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.85)',
-                backdropFilter: 'blur(32px)',
-                WebkitBackdropFilter: 'blur(32px)',
-                borderRadius: '24px',
-                padding: '1.75rem 2rem',
-                border: '1px solid rgba(107, 142, 35, 0.2)',
-                boxShadow: '0 16px 40px rgba(62, 54, 46, 0.06)',
-                marginBottom: '1.75rem',
+              <div className="panel" style={{
+                padding: '1.75rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '14px'
+                gap: '14px',
+                marginBottom: '1.75rem'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -4763,14 +4799,8 @@ export default function App() {
               </div>
 
               {/* Vault Activity Logs Card */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.85)',
-                backdropFilter: 'blur(32px)',
-                WebkitBackdropFilter: 'blur(32px)',
-                borderRadius: '24px',
+              <div className="panel" style={{
                 padding: '1.75rem',
-                border: '1px solid rgba(107, 142, 35, 0.2)',
-                boxShadow: '0 16px 40px rgba(62, 54, 46, 0.06)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1.25rem'
@@ -5412,74 +5442,22 @@ export default function App() {
               )}
 
               {/* Glass 2-Column Split Card */}
-              <div 
-                style={{ 
-                  background: 'rgba(255, 255, 255, 0.85)', 
-                  backdropFilter: 'blur(32px)',
-                  WebkitBackdropFilter: 'blur(32px)',
-                  border: '1px solid rgba(107, 142, 35, 0.2)', 
-                  borderRadius: '24px', 
-                  display: 'grid', 
-                  gridTemplateColumns: '240px 1fr',
-                  minHeight: '450px',
-                  boxShadow: '0 20px 60px rgba(62, 54, 46, 0.08)',
-                  overflow: 'hidden'
-                }}
-              >
+              <div className="settings-container">
                 {/* Left Sidebar Menu */}
-                <div 
-                  style={{ 
-                    borderRight: '1px solid var(--border)', 
-                    padding: '1.25rem 0.75rem', 
-                    background: 'rgba(247, 244, 238, 0.5)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px'
-                  }}
-                >
+                <div className="settings-sidebar">
                   <button
                     onClick={() => setSettingsTab('profile')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      borderRadius: '14px',
-                      border: 'none',
-                      background: settingsTab === 'profile' ? 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)' : 'rgba(255, 255, 255, 0.4)',
-                      color: settingsTab === 'profile' ? '#FFFFFF' : 'var(--text-secondary)',
-                      fontWeight: settingsTab === 'profile' ? 800 : 600,
-                      fontSize: '0.9rem',
-                      cursor: 'pointer',
-                      boxShadow: settingsTab === 'profile' ? '0 6px 18px rgba(107, 142, 35, 0.3)' : 'none',
-                      textAlign: 'left',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className={`settings-tab-btn ${settingsTab === 'profile' ? 'active' : ''}`}
                   >
-                    <User size={18} style={{ color: settingsTab === 'profile' ? '#FFFFFF' : 'var(--green)' }}/>
+                    <User size={18} />
                     <span>Edit Profile</span>
                   </button>
 
                   <button
                     onClick={() => setSettingsTab('security')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      borderRadius: '14px',
-                      border: 'none',
-                      background: settingsTab === 'security' ? 'linear-gradient(135deg, #6B8E23 0%, #4E6B18 100%)' : 'rgba(255, 255, 255, 0.4)',
-                      color: settingsTab === 'security' ? '#FFFFFF' : 'var(--text-secondary)',
-                      fontWeight: settingsTab === 'security' ? 800 : 600,
-                      fontSize: '0.9rem',
-                      cursor: 'pointer',
-                      boxShadow: settingsTab === 'security' ? '0 6px 18px rgba(107, 142, 35, 0.3)' : 'none',
-                      textAlign: 'left',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className={`settings-tab-btn ${settingsTab === 'security' ? 'active' : ''}`}
                   >
-                    <Shield size={18} style={{ color: settingsTab === 'security' ? '#FFFFFF' : 'var(--blue)' }}/>
+                    <Shield size={18} />
                     <span>Security & Password</span>
                   </button>
 
@@ -7152,20 +7130,6 @@ export default function App() {
         );
       })()}
 
-      {/* ═══ BOTTOM NAVIGATION BAR (MOBILE ONLY) ═══ */}
-      <div className="bottom-nav-bar">
-        {navItems.map(it => (
-          <button
-            key={it.id}
-            className={`bottom-nav-item ${view === it.id ? 'active' : ''}`}
-            onClick={() => setView(it.id)}
-            title={it.label}
-          >
-            <div className="icon">{it.icon}</div>
-            <span style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '65px' }}>{it.label}</span>
-          </button>
-        ))}
-      </div>
     </div>
     </>
   );
