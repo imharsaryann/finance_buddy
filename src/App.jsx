@@ -3198,7 +3198,6 @@ export default function App() {
               borderRadius: '8px'
             }}
             alt="Surbhi Telecom Logo"
-            title="Surbhi Telecom (5x Fast Clicks = Admin Access)"
           />
           <div className="brand" style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ 
