@@ -4,9 +4,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 :root {
   /* Brand / Accent - Matched with Surbhi Telecom Logo */
-  --accent:        #6B8E23;
-  --accent-soft:   rgba(107, 142, 35, 0.12);
-  --accent-mid:    rgba(107, 142, 35, 0.25);
+  --accent:        #1E3A5F;
+  --accent-soft:   rgba(30, 58, 95, 0.12);
+  --accent-mid:    rgba(30, 58, 95, 0.25);
 
   /* Solid & Glass Backgrounds - Warm Cream & Frosted Glass */
   --bg-base:       #F7F4EE;
@@ -17,8 +17,8 @@
   --bg-sidebar:    rgba(255, 255, 255, 0.85);
 
   /* Semantic Colors - Logo Matched Harmony */
-  --green:         #6B8E23;
-  --green-bg:      rgba(107, 142, 35, 0.14);
+  --green:         #10B981;
+  --green-bg:      rgba(16, 185, 129, 0.14);
   --red:           #C05C5C;
   --red-bg:        rgba(192, 92, 92, 0.14);
   --amber:         #D4A373;
@@ -33,7 +33,7 @@
   --blue-bg:       rgba(95, 133, 154, 0.14);
 
   /* Gradients */
-  --grad-primary:  linear-gradient(135deg, #6B8E23 0%, #5F859A 100%);
+  --grad-primary:  linear-gradient(135deg, #1E3A5F 0%, #3B82F6 100%);
   --grad-secondary: linear-gradient(135deg, #D4A373 0%, #68607A 100%);
   --grad-danger:   linear-gradient(135deg, #C05C5C 0%, #D4A373 100%);
   --grad-gold:     linear-gradient(135deg, #D4A373 0%, #C05C5C 100%);
@@ -45,8 +45,8 @@
   --text-inverse:   #FFFFFF;
 
   /* Glass Card Borders */
-  --border:        rgba(107, 142, 35, 0.15);
-  --border-strong: rgba(107, 142, 35, 0.28);
+  --border:        rgba(30, 58, 95, 0.15);
+  --border-strong: rgba(30, 58, 95, 0.28);
 
   /* Premium Deep Glass Shadows */
   --shadow-xs: 0 4px 12px rgba(62, 54, 46, 0.04);
@@ -55,7 +55,7 @@
   --shadow-lg: 0 22px 65px rgba(62, 54, 46, 0.12);
   --shadow-xl: 0 32px 90px rgba(62, 54, 46, 0.16);
   
-  --shadow-glow: 0 0 25px rgba(107, 142, 35, 0.18);
+  --shadow-glow: 0 0 25px rgba(30, 58, 95, 0.18);
 
   /* Background details */
   --grid-color: rgba(0,0,0,0.04);
@@ -86,8 +86,8 @@
   --text-muted:     #7A807C;
   --text-inverse:   #121413;
 
-  --border:        rgba(163, 230, 53, 0.15);
-  --border-strong: rgba(163, 230, 53, 0.3);
+  --border:        rgba(59, 130, 246, 0.15);
+  --border-strong: rgba(59, 130, 246, 0.3);
 
   --shadow-xs: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.5);
@@ -95,7 +95,7 @@
   --shadow-lg: 0 22px 65px rgba(0, 0, 0, 0.7);
   --shadow-xl: 0 32px 90px rgba(0, 0, 0, 0.8);
   
-  --shadow-glow: 0 0 25px rgba(163, 230, 53, 0.15);
+  --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.15);
 
   --grid-color: rgba(255,255,255,0.03);
   --vignette-color: rgba(0, 0, 0, 0.8);
