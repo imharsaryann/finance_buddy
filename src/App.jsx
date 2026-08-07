@@ -3256,57 +3256,74 @@ export default function App() {
             )}
           </div>
 
-          {/* Toggle Button */}
-          {!sidebarCollapsed ? (
-            <button
-              onClick={() => {
-                setSidebarCollapsed(true);
-                localStorage.setItem('fb_sidebar_collapsed', 'true');
-              }}
-              title="Collapse Sidebar"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '22px',
-                height: '22px',
-                borderRadius: '6px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                flexShrink: 0,
-                padding: 0
-              }}
-            >
-              <ChevronLeft size={16} />
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                setSidebarCollapsed(false);
-                localStorage.setItem('fb_sidebar_collapsed', 'false');
-              }}
-              title="Expand Sidebar"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '22px',
-                height: '22px',
-                borderRadius: '6px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                margin: '4px auto 0 auto'
-              }}
-            >
-              <ChevronRight size={16} />
-            </button>
-          )}
+          {/* Desktop Toggle Button */}
+          <div className="desktop-toggle-btn">
+            {!sidebarCollapsed ? (
+              <button
+                onClick={() => {
+                  setSidebarCollapsed(true);
+                  localStorage.setItem('fb_sidebar_collapsed', 'true');
+                }}
+                title="Collapse Sidebar"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '6px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                  padding: 0
+                }}
+              >
+                <ChevronLeft size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setSidebarCollapsed(false);
+                  localStorage.setItem('fb_sidebar_collapsed', 'false');
+                }}
+                title="Expand Sidebar"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '6px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  margin: '4px auto 0 auto'
+                }}
+              >
+                <ChevronRight size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Mobile Toggle Button */}
+          <button 
+            className="mobile-menu-btn" 
+            onClick={() => setMobileMenuOpen(true)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              padding: '4px'
+            }}
+          >
+            <Menu size={24} />
+          </button>
         </div>
 
         <div className="nav-menu">

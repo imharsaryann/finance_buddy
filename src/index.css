@@ -359,6 +359,13 @@ input, select, textarea { font-family: var(--font); outline: none; }
   flex-direction: column;
 }
 
+.mobile-menu-btn {
+  display: none;
+}
+.desktop-toggle-btn {
+  display: flex;
+}
+
 @media (max-width: 900px) {
   .app-layout {
     flex-direction: column;
@@ -378,6 +385,9 @@ input, select, textarea { font-family: var(--font); outline: none; }
   }
   .mobile-menu-btn {
     display: flex !important;
+  }
+  .desktop-toggle-btn {
+    display: none !important;
   }
 }
 
