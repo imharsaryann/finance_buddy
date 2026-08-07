@@ -1466,20 +1466,23 @@ input, select, textarea { font-family: var(--font); outline: none; }
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 2000;
   display: flex;
 }
 .mobile-menu-content {
   background: var(--bg-surface);
-  width: 280px;
+  width: 300px;
+  max-width: 85vw;
   height: 100%;
-  padding: 1.5rem;
-  box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  padding: 1.75rem 1.25rem;
+  box-shadow: 8px 0 36px rgba(0,0,0,0.25);
   display: flex;
   flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
 }
 
 /* ============ BENTO GRID ============ */
@@ -1645,7 +1648,7 @@ input, select, textarea { font-family: var(--font); outline: none; }
   .form-grid { grid-template-columns: 1fr !important; }
   .item-grid { grid-template-columns: 1fr !important; }
   .dashboard-bento { grid-template-columns: 1fr !important; }
-  .db-metric-nw, .db-metric-assets, .db-metric-dues, .db-metric-savings, 
+  .db-metric-nw, .db-metric-assets, .db-metric-dues, .db-metric-savings, .db-metric-inc, .db-metric-exp,
   .db-chart-main, .db-quick-add, .db-accounts, .db-chart-bar, .db-khata, .db-transactions {
     grid-column: span 1 !important;
     grid-row: auto !important;
@@ -2980,7 +2983,7 @@ input, select, textarea { font-family: var(--font); outline: none; }
   }
 }
 
-/* Navbar Logo Fixes */
+/* Navbar Logo Clean Fixes */
 .navbar-logo-container {
   display: flex;
   align-items: center;
@@ -2989,17 +2992,18 @@ input, select, textarea { font-family: var(--font); outline: none; }
   gap: 12px;
 }
 .navbar-logo-img {
-  height: 160px;
-  max-height: none;
+  height: 42px;
+  max-height: 100%;
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
   border-radius: 8px;
   cursor: pointer;
-  filter: drop-shadow(0 4px 12px var(--accent-soft));
-  margin-top: -60px;
-  margin-bottom: -60px;
-  margin-left: -30px;
+  filter: drop-shadow(0 2px 8px var(--accent-soft));
+  transition: transform 0.2s ease;
+}
+.navbar-logo-img:hover {
+  transform: scale(1.05);
 }
 @media (max-width: 768px) {
   .navbar-logo-img {

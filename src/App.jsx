@@ -3184,31 +3184,24 @@ export default function App() {
       <div className="app-layout">
       <nav className="top-navbar">
         {/* Logo Section */}
-        <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingRight: '1rem', gap: '12px' }}>
+        <div className="navbar-logo-container">
           <img
             src="/logo-surbhi.svg"
             onClick={handleLogoSecretClick}
-            style={{
-              height: '42px',
-              width: 'auto',
-              objectFit: 'contain',
-              filter: 'drop-shadow(0 4px 12px var(--accent-soft))',
-              cursor: 'pointer',
-              flexShrink: 0,
-              borderRadius: '8px'
-            }}
+            className="navbar-logo-img"
             alt="Surbhi Telecom Logo"
           />
-          <div className="brand" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="brand" onClick={handleLogoSecretClick} style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>
             <span style={{ 
-              fontSize: '1.25rem', 
+              fontSize: '1.35rem', 
               fontWeight: 900, 
-              letterSpacing: '-0.5px',
-              background: 'linear-gradient(135deg, var(--green) 0%, var(--amber) 100%)',
+              fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
+              background: 'linear-gradient(135deg, var(--nav-active-text) 0%, var(--nav-accent) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.4px',
               lineHeight: 1.1
-            }}>{session?.user?.user_metadata?.full_name || 'Finance Buddy'}</span>
+            }}>Surbhi Telecom</span>
           </div>
         </div>
 
@@ -3330,21 +3323,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Theme Toggle */}
-          <button
-            onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
-            title="Toggle Theme"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: '36px', height: '36px', borderRadius: '8px',
-              background: 'transparent', border: '1px solid transparent',
-              color: 'var(--nav-inactive-text)', cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'var(--nav-accent)'; e.currentTarget.style.background = 'var(--bg-hover)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'var(--nav-inactive-text)'; e.currentTarget.style.background = 'transparent'; }}
-          >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
+
           
           {/* Vertical Divider Hairline */}
           <div style={{ width: '1px', height: '24px', background: 'var(--nav-border)', margin: '0 4px' }} />
@@ -3370,10 +3349,11 @@ export default function App() {
             className="mobile-menu-btn" 
             onClick={() => setMobileMenuOpen(true)}
             style={{
-              background: 'transparent', border: 'none', color: 'var(--nav-inactive-text)', cursor: 'pointer', padding: '4px'
+              background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', padding: '6px 10px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}
+            title="Open Menu"
           >
-            <Menu size={24} />
+            <Menu size={22} />
           </button>
 
         </div>
@@ -3397,36 +3377,74 @@ export default function App() {
               className="mobile-menu-content"
               onClick={e => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <img src="/logo-surbhi.svg" alt="Surbhi Telecom Logo" style={{ height: '28px', width: 'auto', borderRadius: '4px' }} />
-                  <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Finance Buddy</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <img src="/logo-surbhi.svg" alt="Surbhi Telecom Logo" style={{ height: '34px', width: 'auto', borderRadius: '6px' }} />
+                  <span style={{ 
+                    fontSize: '1.3rem', 
+                    fontWeight: 900, 
+                    fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif", 
+                    background: 'linear-gradient(135deg, var(--nav-active-text) 0%, var(--nav-accent) 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '-0.4px' 
+                  }}>Surbhi Telecom</span>
                 </div>
-                <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}>
+                <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Close Menu">
                   <X size={20} />
                 </button>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                {navItems.map(it => (
-                  <button
-                    key={it.id}
-                    className={`nav-item ${view === it.id ? 'active' : ''}`}
-                    style={{ width: '100%', padding: '12px 14px', justifyContent: 'flex-start', borderRadius: '12px' }}
-                    onClick={() => { setView(it.id); setMobileMenuOpen(false); }}
-                  >
-                    <div style={{ flexShrink: 0, fontSize: '1.2rem', lineHeight: 1 }}>{it.icon}</div>
-                    <span className="nav-item-label" style={{ fontSize: '1rem', fontWeight: 700 }}>{it.label}</span>
-                  </button>
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                {navItems.map(it => {
+                  const isActive = view === it.id;
+                  return (
+                    <button
+                      key={it.id}
+                      className={`nav-item ${isActive ? 'active' : ''}`}
+                      style={{ 
+                        width: '100%', 
+                        padding: '12px 16px', 
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        fontWeight: isActive ? 800 : 600,
+                        fontSize: '0.95rem',
+                        transition: 'all 0.2s ease',
+                        background: isActive ? 'var(--accent-soft)' : 'transparent',
+                        color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                        border: isActive ? '1px solid rgba(79, 70, 229, 0.2)' : '1px solid transparent'
+                      }}
+                      onClick={() => { setView(it.id); setMobileMenuOpen(false); }}
+                    >
+                      <div style={{ flexShrink: 0, fontSize: '1.2rem', lineHeight: 1, color: isActive ? 'var(--primary)' : 'var(--text-muted)' }}>{it.icon}</div>
+                      <span className="nav-item-label" style={{ fontSize: '0.95rem', fontWeight: isActive ? 800 : 600 }}>{it.label}</span>
+                    </button>
+                  );
+                })}
                 
                 {/* Settings Link for Mobile */}
                 <button
                   className={`nav-item ${view === 'settings' ? 'active' : ''}`}
-                  style={{ width: '100%', padding: '12px 14px', justifyContent: 'flex-start', borderRadius: '12px', marginTop: '8px', background: view === 'settings' ? 'var(--bg-base)' : 'transparent', border: view === 'settings' ? '1px solid var(--border)' : '1px solid transparent' }}
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px 16px', 
+                    borderRadius: '12px', 
+                    marginTop: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    fontWeight: view === 'settings' ? 800 : 600,
+                    fontSize: '0.95rem',
+                    transition: 'all 0.2s ease',
+                    background: view === 'settings' ? 'var(--accent-soft)' : 'transparent',
+                    color: view === 'settings' ? 'var(--primary)' : 'var(--text-secondary)',
+                    border: view === 'settings' ? '1px solid rgba(79, 70, 229, 0.2)' : '1px solid transparent'
+                  }}
                   onClick={() => { setView('settings'); setMobileMenuOpen(false); }}
                 >
-                  <div style={{ flexShrink: 0, fontSize: '1.2rem', lineHeight: 1, color: 'var(--text-secondary)' }}><Settings size={20} /></div>
-                  <span className="nav-item-label" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Settings</span>
+                  <div style={{ flexShrink: 0, fontSize: '1.2rem', lineHeight: 1, color: view === 'settings' ? 'var(--primary)' : 'var(--text-muted)' }}><Settings size={20} /></div>
+                  <span className="nav-item-label" style={{ fontSize: '0.95rem', fontWeight: view === 'settings' ? 800 : 600 }}>Settings</span>
                 </button>
               </div>
               
@@ -3450,7 +3468,7 @@ export default function App() {
                 </button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--grad-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1020', fontWeight: 'bold' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--grad-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 'bold' }}>
                     {session?.user?.user_metadata?.full_name?.charAt(0) || 'U'}
                   </div>
                   <div style={{ overflow: 'hidden' }}>
@@ -4748,7 +4766,7 @@ export default function App() {
               {/* Glass Header */}
               <div className="page-header" style={{ marginBottom: '1.75rem' }}>
                 <div className="page-header-left">
-                  <span className="eyebrow" style={{ color: 'var(--green)', fontWeight: 800 }}>Personal Emergency & Reserve Savings</span>
+                  <span className="eyebrow" style={{ color: 'var(--nav-accent)', fontWeight: 800 }}>Personal Emergency & Reserve Savings</span>
                   <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)' }}>Personal Vault</h1>
                 </div>
                 <div className="page-header-right" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -5383,7 +5401,7 @@ export default function App() {
               {/* Header */}
               <div className="page-header" style={{ marginBottom: '1.75rem' }}>
                 <div className="page-header-left">
-                  <span className="eyebrow" style={{ color: 'var(--green)', fontWeight: 800 }}>PREFERENCES & ACCOUNT MANAGEMENT</span>
+                  <span className="eyebrow" style={{ color: 'var(--nav-accent)', fontWeight: 800 }}>PREFERENCES & ACCOUNT MANAGEMENT</span>
                   <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)' }}>Settings</h1>
                 </div>
               </div>
@@ -5414,11 +5432,11 @@ export default function App() {
                       height: '72px', 
                       borderRadius: '50%', 
                       padding: '3px', 
-                      background: 'linear-gradient(135deg, #6B8E23 0%, #D4A373 50%, #5F859A 100%)',
+                      background: 'linear-gradient(135deg, #0A2A5E 0%, #2E7BD6 50%, #6FB4E8 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 6px 18px rgba(107, 142, 35, 0.25)'
+                      boxShadow: '0 6px 18px rgba(46, 123, 214, 0.25)'
                     }}
                   >
                     <div 
@@ -5561,115 +5579,128 @@ export default function App() {
                 {/* Right Active Content Area */}
                 <div className="settings-content">
                   
-                  {/* TAB 1: EDIT PROFILE */}
+                  {/* TAB 1: EDIT PROFILE (2-Column Compact Grid) */}
                   {settingsTab === 'profile' && (
-                    <div className="settings-bento-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Edit Profile</h3>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Update your personal profile information</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', width: '100%' }}>
+                      
+                      {/* Left Column: Personal Info Form */}
+                      <div className="settings-bento-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        <div>
+                          <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Edit Profile</h3>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Update your personal profile information</p>
+                        </div>
+
+                        <form onSubmit={handleUpdateName} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase' }}>
+                              Full Display Name
+                            </label>
+                            <input
+                              type="text"
+                              value={settingsName}
+                              onChange={e => setSettingsName(e.target.value)}
+                              placeholder={session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0]}
+                              style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: 700, outline: 'none' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase' }}>
+                              Email Address (Primary Account)
+                            </label>
+                            <input
+                              type="email"
+                              disabled
+                              value={session?.user?.email || ''}
+                              style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 700, cursor: 'not-allowed' }}
+                            />
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Email address is linked to your Supabase Auth account.</span>
+                          </div>
+
+                          <button
+                            type="submit"
+                            className="btn btn-primary"
+                            style={{ padding: '12px 20px', borderRadius: '12px', fontWeight: 800, marginTop: '0.5rem', alignSelf: 'flex-start' }}
+                          >
+                            Save Profile Changes
+                          </button>
+                        </form>
                       </div>
 
-                      <form onSubmit={handleUpdateName} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '420px' }}>
+                      {/* Right Column: Navbar Visibility Preferences */}
+                      <div className="settings-bento-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <div>
-                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase' }}>
-                            Full Display Name
-                          </label>
-                          <input
-                            type="text"
-                            value={settingsName}
-                            onChange={e => setSettingsName(e.target.value)}
-                            placeholder={session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0]}
-                            style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: 700, outline: 'none' }}
-                          />
+                          <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Navbar Items Visibility</h3>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Customize elements shown in top navbar</p>
                         </div>
 
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase' }}>
-                            Email Address (Primary Account)
-                          </label>
-                          <input
-                            type="email"
-                            disabled
-                            value={session?.user?.email || ''}
-                            style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 700, cursor: 'not-allowed' }}
-                          />
-                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Email address is linked to your Supabase Auth account.</span>
+                        {/* Appearance: Navbar Quick Links Toggle */}
+                        <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Quick Links in Navbar</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Pinned links item in navbar</div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const next = !showNavLinks;
+                              setShowNavLinks(next);
+                              localStorage.setItem('fb_show_nav_links', next);
+                            }}
+                            style={{
+                              width: '44px',
+                              height: '24px',
+                              borderRadius: '99px',
+                              border: 'none',
+                              background: showNavLinks ? 'var(--nav-accent)' : 'var(--border-strong)',
+                              position: 'relative',
+                              cursor: 'pointer',
+                              transition: 'background 0.2s ease',
+                              flexShrink: 0
+                            }}
+                          >
+                            <div style={{
+                              position: 'absolute',
+                              top: '2px',
+                              left: showNavLinks ? '22px' : '2px',
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              background: '#ffffff',
+                              boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                              transition: 'left 0.2s ease'
+                            }}/>
+                          </button>
                         </div>
 
-                        <button
-                          type="submit"
-                          className="btn btn-primary"
-                          style={{ padding: '12px 20px', borderRadius: '12px', fontWeight: 800, marginTop: '0.5rem', alignSelf: 'flex-start' }}
-                        >
-                          Save Profile Changes
-                        </button>
-                      </form>
-
-                      {/* Appearance: Navbar Quick Links Toggle */}
-                      <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '420px' }}>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Quick Links in Navbar</div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Pinned links ko sidebar mein show karo</div>
+                        {/* Incomes in Navbar Toggle */}
+                        <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Incomes Tab in Navbar</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Incomes navigation tab</div>
+                          </div>
+                          <button
+                            onClick={() => { const n = !showIncomesNav; setShowIncomesNav(n); localStorage.setItem('fb_show_incomes_nav', n); }}
+                            style={{ width: '44px', height: '24px', borderRadius: '99px', border: 'none', background: showIncomesNav ? 'var(--nav-accent)' : 'var(--border-strong)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s ease', flexShrink: 0 }}
+                          >
+                            <div style={{ position: 'absolute', top: '2px', left: showIncomesNav ? '22px' : '2px', width: '20px', height: '20px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'left 0.2s ease' }}/>
+                          </button>
                         </div>
-                        <button
-                          onClick={() => {
-                            const next = !showNavLinks;
-                            setShowNavLinks(next);
-                            localStorage.setItem('fb_show_nav_links', next);
-                          }}
-                          style={{
-                            width: '48px',
-                            height: '26px',
-                            borderRadius: '99px',
-                            border: 'none',
-                            background: showNavLinks ? 'var(--green)' : 'var(--border-strong)',
-                            position: 'relative',
-                            cursor: 'pointer',
-                            transition: 'background 0.2s ease',
-                            flexShrink: 0
-                          }}
-                        >
-                          <div style={{
-                            position: 'absolute',
-                            top: '3px',
-                            left: showNavLinks ? '25px' : '3px',
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            background: '#ffffff',
-                            boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                            transition: 'left 0.2s ease'
-                          }}/>
-                        </button>
+
+                        {/* Expenses in Navbar Toggle */}
+                        <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Expenses Tab in Navbar</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Expenses navigation tab</div>
+                          </div>
+                          <button
+                            onClick={() => { const n = !showExpensesNav; setShowExpensesNav(n); localStorage.setItem('fb_show_expenses_nav', n); }}
+                            style={{ width: '44px', height: '24px', borderRadius: '99px', border: 'none', background: showExpensesNav ? 'var(--nav-accent)' : 'var(--border-strong)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s ease', flexShrink: 0 }}
+                          >
+                            <div style={{ position: 'absolute', top: '2px', left: showExpensesNav ? '22px' : '2px', width: '20px', height: '20px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'left 0.2s ease' }}/>
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Incomes in Navbar Toggle */}
-                      <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '420px' }}>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Incomes Tab in Navbar</div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Incomes ko sidebar navigation mein dikhao</div>
-                        </div>
-                        <button
-                          onClick={() => { const n = !showIncomesNav; setShowIncomesNav(n); localStorage.setItem('fb_show_incomes_nav', n); }}
-                          style={{ width: '48px', height: '26px', borderRadius: '99px', border: 'none', background: showIncomesNav ? 'var(--green)' : 'var(--border-strong)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s ease', flexShrink: 0 }}
-                        >
-                          <div style={{ position: 'absolute', top: '3px', left: showIncomesNav ? '25px' : '3px', width: '20px', height: '20px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'left 0.2s ease' }}/>
-                        </button>
-                      </div>
-
-                      {/* Expenses in Navbar Toggle */}
-                      <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '420px' }}>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>Expenses Tab in Navbar</div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>Expenses ko sidebar navigation mein dikhao</div>
-                        </div>
-                        <button
-                          onClick={() => { const n = !showExpensesNav; setShowExpensesNav(n); localStorage.setItem('fb_show_expenses_nav', n); }}
-                          style={{ width: '48px', height: '26px', borderRadius: '99px', border: 'none', background: showExpensesNav ? 'var(--green)' : 'var(--border-strong)', position: 'relative', cursor: 'pointer', transition: 'background 0.2s ease', flexShrink: 0 }}
-                        >
-                          <div style={{ position: 'absolute', top: '3px', left: showExpensesNav ? '25px' : '3px', width: '20px', height: '20px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'left 0.2s ease' }}/>
-                        </button>
-                      </div>
                     </div>
                   )}
 
@@ -5900,7 +5931,15 @@ export default function App() {
                       <div style={{ background: 'var(--bg-base)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.95rem' }}>
                           <span style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>Developer:</span>
-                          <strong style={{ color: 'var(--text-primary)', fontSize: '1.05rem', fontWeight: 900, background: 'linear-gradient(135deg, var(--green) 0%, var(--amber) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Harsh Aryan</strong>
+                          <strong style={{ 
+                            fontFamily: "'Caveat', 'Pacifico', cursive",
+                            fontSize: '1.5rem', 
+                            fontWeight: 700, 
+                            background: 'linear-gradient(135deg, var(--nav-active-text) 0%, var(--nav-accent) 100%)', 
+                            WebkitBackgroundClip: 'text', 
+                            WebkitTextFillColor: 'transparent',
+                            letterSpacing: '0.5px'
+                          }}>Harsh Aryan</strong>
                         </div>
                       </div>
                     </div>
