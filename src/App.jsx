@@ -3379,7 +3379,7 @@ export default function App() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <img src="/logo-surbhi.svg" alt="Surbhi Telecom Logo" style={{ height: '34px', width: 'auto', borderRadius: '6px' }} />
+                  <img src="/logo-surbhi.svg" alt="Surbhi Telecom Logo" style={{ height: '38px', width: 'auto', borderRadius: '6px' }} />
                   <span style={{ 
                     fontSize: '1.3rem', 
                     fontWeight: 900, 

@@ -2992,7 +2992,7 @@ input, select, textarea { font-family: var(--font); outline: none; }
   gap: 12px;
 }
 .navbar-logo-img {
-  height: 42px;
+  height: 46px;
   max-height: 100%;
   width: auto;
   object-fit: contain;
@@ -3007,6 +3007,6 @@ input, select, textarea { font-family: var(--font); outline: none; }
 }
 @media (max-width: 768px) {
   .navbar-logo-img {
-    height: 32px;
+    height: 38px;
   }
 }
