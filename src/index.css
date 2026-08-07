@@ -2969,3 +2969,27 @@ input, select, textarea { font-family: var(--font); outline: none; }
     padding: 1.25rem;
   }
 }
+
+/* Navbar Logo Fixes */
+.navbar-logo-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-right: 1rem;
+  gap: 12px;
+}
+.navbar-logo-img {
+  height: 40px;
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 12px var(--accent-soft));
+}
+@media (max-width: 768px) {
+  .navbar-logo-img {
+    height: 32px;
+  }
+}
