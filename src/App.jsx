@@ -7352,6 +7352,20 @@ export default function App() {
         );
       })()}
 
+      {/* ═══ BOTTOM NAVIGATION BAR (MOBILE ONLY) ═══ */}
+      <div className="bottom-nav-bar">
+        {navItems.map(it => (
+          <button
+            key={it.id}
+            className={`bottom-nav-item ${view === it.id ? 'active' : ''}`}
+            onClick={() => setView(it.id)}
+            title={it.label}
+          >
+            <div className="icon">{it.icon}</div>
+            <span style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '65px' }}>{it.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
     </>
   );
