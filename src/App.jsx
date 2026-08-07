@@ -7,7 +7,7 @@ import {
   BarChart2, ArrowUpRight, ArrowDownRight, Menu, Loader, User, Minus, Briefcase, Clock, Shield, Info, Mail, Lock,
   Download, Upload, FileText, Database, RefreshCw, Settings, MoreVertical, MoreHorizontal, Sparkles, Globe, ExternalLink, Search, Star,
   StickyNote, PinOff, Palette, Archive, Hash, ShieldCheck, Zap, Moon, Sun,
-  Compass, BookOpen, Fingerprint
+  Compass, BookOpen, Fingerprint, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';

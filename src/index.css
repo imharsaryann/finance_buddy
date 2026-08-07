@@ -2926,3 +2926,31 @@ input, select, textarea { font-family: var(--font); outline: none; }
   padding: 2.5rem;
   background: transparent;
 }
+
+@media (max-width: 768px) {
+  .settings-container {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .settings-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 1rem;
+    gap: 8px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  .settings-sidebar button {
+    white-space: nowrap;
+    padding: 8px 16px !important;
+  }
+  .settings-sidebar span {
+    font-size: 0.85rem;
+  }
+  .settings-content {
+    padding: 1.25rem 1rem;
+  }
+}
