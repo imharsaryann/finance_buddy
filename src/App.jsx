@@ -3191,17 +3191,27 @@ export default function App() {
             className="navbar-logo-img"
             alt="Surbhi Telecom Logo"
           />
-          <div className="brand" onClick={handleLogoSecretClick} style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>
+          <div className="brand" onClick={handleLogoSecretClick} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: 'pointer' }}>
             <span style={{ 
-              fontSize: '1.35rem', 
+              fontSize: '1.3rem', 
               fontWeight: 900, 
-              fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
-              background: 'linear-gradient(135deg, var(--nav-active-text) 0%, var(--nav-accent) 100%)',
+              fontFamily: "'Syne', 'Outfit', sans-serif",
+              background: 'linear-gradient(135deg, var(--nav-active-text) 0%, var(--nav-accent) 60%, var(--secondary) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              letterSpacing: '-0.4px',
-              lineHeight: 1.1
+              letterSpacing: '-0.3px',
+              lineHeight: 1.1,
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))'
             }}>Surbhi Telecom</span>
+            <span style={{
+              fontSize: '0.6rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '1.6px',
+              color: 'var(--nav-accent)',
+              opacity: 0.9,
+              marginTop: '1px'
+            }}>Store Management</span>
           </div>
         </div>
 
@@ -3380,15 +3390,21 @@ export default function App() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <img src="/logo-surbhi.svg" alt="Surbhi Telecom Logo" style={{ height: '38px', width: 'auto', borderRadius: '6px' }} />
-                  <span style={{ 
-                    fontSize: '1.3rem', 
-                    fontWeight: 900, 
-                    fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif", 
-                    background: 'linear-gradient(135deg, var(--nav-active-text) 0%, var(--nav-accent) 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    letterSpacing: '-0.4px' 
-                  }}>Surbhi Telecom</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <span style={{ 
+                      fontSize: '1.25rem', 
+                      fontWeight: 900, 
+                      fontFamily: "'Syne', 'Outfit', sans-serif", 
+                      background: 'linear-gradient(135deg, var(--nav-active-text) 0%, var(--nav-accent) 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      letterSpacing: '-0.3px',
+                      lineHeight: 1.1
+                    }}>Surbhi Telecom</span>
+                    <span style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--nav-accent)', opacity: 0.9, marginTop: '1px' }}>
+                      Store Management
+                    </span>
+                  </div>
                 </div>
                 <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Close Menu">
                   <X size={20} />
